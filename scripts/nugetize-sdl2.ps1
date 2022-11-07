@@ -25,7 +25,7 @@ try {
 
   $Releases = Invoke-WebRequest "$DownloadUri" -UseBasicParsing
 
-  $Hrefs = $Releases.Links.href |? { $_ -like "SDL2-devel-*-VC.zip" }
+  $Hrefs = $Releases.Links.href | Where-Object { $_ -like "SDL2-devel-*-VC.zip" }
   $LatestHref = ($Hrefs | Sort-Object -Descending {[System.Version]($_ | Select-String '((?:\d{1,3}\.){2}\d{1,3})').Matches[0].Groups[1].Value})[0]
   $LatestVersion = ($LatestHref | Select-String '((?:\d{1,3}\.){2}\d{1,3})').Matches[0].Groups[1].Value
   $ZipDownloadPath = Join-Path $DownloadsDir $LatestHref
