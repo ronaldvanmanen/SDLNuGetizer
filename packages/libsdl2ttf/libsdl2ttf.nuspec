@@ -7,18 +7,13 @@
     <owners>Ronald van Manen</owners>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <license type="expression">Zlib</license>
-    <projectUrl>https://github.com/ronaldvanmanen/SDL2NuGetizer</projectUrl>
+    <projectUrl>https://github.com/ronaldvanmanen/SDLNuGetizer</projectUrl>
     <description>Multi-platform native library for SDL2 TTF.</description>
     <copyright>Copyright © Ronald van Manen</copyright>
-    <repository type="git" url="https://github.com/ronaldvanmanen/SDL2NuGetizer" branch="main" />
+    <repository type="git" url="https://github.com/ronaldvanmanen/SDLNuGetizer" branch="main" />
     <dependencies>
-      <group targetFramework="net5.0" />
+      <group targetFramework="net6.0" />
       <group targetFramework="native0.0" />
     </dependencies>
   </metadata>
-  <files>
-    <file src="runtime.json" target="runtime.json" />
-    <file src="lib\net5.0\_._" target="lib\net5.0\_._" />
-    <file src="include\**\*.h" target="lib\native\include" />
-  </files>
 </package>

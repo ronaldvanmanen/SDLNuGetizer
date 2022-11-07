@@ -7,12 +7,9 @@
     <owners>Ronald van Manen</owners>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <license type="expression">Zlib</license>
-    <projectUrl>https://github.com/ronaldvanmanen/SDL2NuGetizer</projectUrl>
+    <projectUrl>https://github.com/ronaldvanmanen/SDLNuGetizer</projectUrl>
     <description>win x64 native library for SDL2 TTF.</description>
     <copyright>Copyright © Ronald van Manen</copyright>
-    <repository type="git" url="https://github.com/ronaldvanmanen/SDL2NuGetizer" branch="main" />
+    <repository type="git" url="https://github.com/ronaldvanmanen/SDLNuGetizer" branch="main" />
   </metadata>
-  <files>
-    <file src="SDL2_ttf.dll" target="runtimes\win-x64\native\SDL2_ttf.dll" />
-  </files>
 </package>
