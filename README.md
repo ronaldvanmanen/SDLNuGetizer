@@ -1,9 +1,8 @@
 # SDL2NuGetizer
 
-SDL2NuGetizer provides actions for automatically creating NuGet packages of libsdl2 binaries.
+SDL2NuGetizer provides actions for automatically creating NuGet packages of SDL2 binaries.
 
 [![nuget](https://github.com/ronaldvanmanen/SDL2NuGetizer/actions/workflows/nugetize-sdl2.yml/badge.svg)](https://github.com/ronaldvanmanen/SDL2NuGetizer/actions/workflows/nugetize-sdl2.yml)
-[![nuget](https://github.com/ronaldvanmanen/SDL2NuGetizer/actions/workflows/nugetize-sdl2ttf.yml/badge.svg)](https://github.com/ronaldvanmanen/SDL2NuGetizer/actions/workflows/nugetize-sdl2ttf.yml)
 
 ## Table of Contents
 
