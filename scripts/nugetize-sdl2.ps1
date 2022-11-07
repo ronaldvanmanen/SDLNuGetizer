@@ -1,4 +1,4 @@
-function Create-Directory([string[]] $Path) {
+function New-Directory([string[]] $Path) {
   if (!(Test-Path -Path $Path)) {
     New-Item -Path $Path -Force -ItemType "Directory" | Out-Null
   }
@@ -10,16 +10,16 @@ try {
   $PackagesDir = Join-Path -Path $RepoRoot -ChildPath "packages"
 
   $ArtifactsDir = Join-Path -Path $RepoRoot -ChildPath "artifacts"
-  Create-Directory -Path $ArtifactsDir
+  New-Directory -Path $ArtifactsDir
 
   $ArtifactsPkgDir = Join-Path $ArtifactsDir -ChildPath "pkg"
-  Create-Directory -Path $ArtifactsPkgDir
+  New-Directory -Path $ArtifactsPkgDir
 
   $StagingDir = Join-Path -Path $RepoRoot -ChildPath "staging"
-  Create-Directory $StagingDir
+  New-Directory $StagingDir
 
   $DownloadsDir = Join-Path -Path $RepoRoot -ChildPath "downloads"
-  Create-Directory -Path $DownloadsDir
+  New-Directory -Path $DownloadsDir
 
   $DownloadUri = "https://www.libsdl.org/release/"
 
