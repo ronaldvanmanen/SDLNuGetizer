@@ -51,9 +51,9 @@ try {
   $ExpandedFiles = Expand-Archive -Path $ZipDownloadPath -DestinationPath $DownloadsDir -Force -Verbose *>&1
 
   Write-Host "Staging SDL2 development libraries to '$StagingDir'..." -ForegroundColor Yellow
-  Copy-Item -Path $PackagesDir\libsdl2 -Destination $StagingDir -Force -Recurse
-  Copy-Item -Path $PackagesDir\libsdl2.runtime.win-x64 -Destination $StagingDir -Force -Recurse
-  Copy-Item -Path $PackagesDir\libsdl2.runtime.win-x86 -Destination $StagingDir -Force -Recurse
+  Copy-Item -Path $PackagesDir\SDL2 -Destination $StagingDir -Force -Recurse
+  Copy-Item -Path $PackagesDir\SDL2.runtime.win-x64 -Destination $StagingDir -Force -Recurse
+  Copy-Item -Path $PackagesDir\SDL2.runtime.win-x86 -Destination $StagingDir -Force -Recurse
 
   $ExpandedFiles | Foreach-Object {
     if ($_.message -match "Created '(.*)'.*") {
@@ -64,48 +64,48 @@ try {
           ($ExpandedFile -like '*\README.txt') -or
           ($ExpandedFile -like '*\README-SDL.txt') -or
           ($ExpandedFile -like '*\WhatsNew.txt')) {
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\libsdl2 -Force
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\libsdl2.runtime.win-x64 -Force
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\libsdl2.runtime.win-x86 -Force
+        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2 -Force
+        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x64 -Force
+        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x86 -Force
       }
       elseif ($ExpandedFile -like '*\docs\*.md') {
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\libsdl2\docs -Force
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\libsdl2.runtime.win-x64\docs -Force
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\libsdl2.runtime.win-x86\docs -Force
+        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2\docs -Force
+        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x64\docs -Force
+        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x86\docs -Force
       }
       elseif ($ExpandedFile -like '*\include\*.h') {
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\libsdl2\lib\native\include -Force
+        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2\lib\native\include -Force
       }
       elseif ($ExpandedFile -like '*\lib\x64\*.dll') {
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\libsdl2.runtime.win-x64\runtimes\win-x64\native -Force
+        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x64\runtimes\win-x64\native -Force
       }
       elseif ($ExpandedFile -like '*\lib\x86\*.dll') {
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\libsdl2.runtime.win-x86\runtimes\win-x86\native -Force
+        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x86\runtimes\win-x86\native -Force
       }
     }
   }
 
   Write-Host "Replace variable `$version`$ in runtime.json with value '$PackageVersion'..." -ForegroundColor Yellow
-  $RuntimeContent = Get-Content $StagingDir\libsdl2\runtime.json -Raw
+  $RuntimeContent = Get-Content $StagingDir\SDL2\runtime.json -Raw
   $RuntimeContent = $RuntimeContent.replace('$version$', $PackageVersion)
-  Set-Content $StagingDir\libsdl2\runtime.json $RuntimeContent
+  Set-Content $StagingDir\SDL2\runtime.json $RuntimeContent
 
-  Write-Host "Build 'libsdl2' package..." -ForegroundColor Yellow
-  & nuget pack $StagingDir\libsdl2\libsdl2.nuspec -Properties version=$PackageVersion -OutputDirectory $ArtifactsPkgDir
+  Write-Host "Build 'SDL2' package..." -ForegroundColor Yellow
+  & nuget pack $StagingDir\SDL2\SDL2.nuspec -Properties version=$PackageVersion -OutputDirectory $ArtifactsPkgDir
   if ($LastExitCode -ne 0) {
-    throw "'nuget pack' failed for 'libsdl2.nuspec'"
+    throw "'nuget pack' failed for 'SDL2.nuspec'"
   }
   
-  Write-Host "Build 'libsdl2.runtime.win-x64' package..." -ForegroundColor Yellow
-  & nuget pack $StagingDir\libsdl2.runtime.win-x64\libsdl2.runtime.win-x64.nuspec -Properties version=$PackageVersion -OutputDirectory $ArtifactsPkgDir
+  Write-Host "Build 'SDL2.runtime.win-x64' package..." -ForegroundColor Yellow
+  & nuget pack $StagingDir\SDL2.runtime.win-x64\SDL2.runtime.win-x64.nuspec -Properties version=$PackageVersion -OutputDirectory $ArtifactsPkgDir
   if ($LastExitCode -ne 0) {
-    throw "'nuget pack' failed for 'libsdl2.runtime.win-x64.nuspec'"
+    throw "'nuget pack' failed for 'SDL2.runtime.win-x64.nuspec'"
   }
   
-  Write-Host "Build 'libsdl2.runtime.win-x86' package..." -ForegroundColor Yellow
-  & nuget pack $StagingDir\libsdl2.runtime.win-x86\libsdl2.runtime.win-x86.nuspec -Properties version=$PackageVersion -OutputDirectory $ArtifactsPkgDir
+  Write-Host "Build 'SDL2.runtime.win-x86' package..." -ForegroundColor Yellow
+  & nuget pack $StagingDir\SDL2.runtime.win-x86\SDL2.runtime.win-x86.nuspec -Properties version=$PackageVersion -OutputDirectory $ArtifactsPkgDir
   if ($LastExitCode -ne 0) {
-    throw "'nuget pack' failed for 'libsdl2.runtime.win-x86.nuspec'"
+    throw "'nuget pack' failed for 'SDL2.runtime.win-x86.nuspec'"
   }
 }
 catch {
