@@ -28,6 +28,8 @@ try {
   $DownloadsDir = Join-Path -Path $RepoRoot -ChildPath "downloads"
   New-Directory -Path $DownloadsDir
 
+  & dotnet tool restore
+
   $GitVersion = dotnet gitversion /output json | ConvertFrom-Json
   $MajorMinorPatch = $GitVersion.MajorMinorPatch
   $PackageVersion = $GitVersion.NuGetVersion
