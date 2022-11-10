@@ -1,5 +1,6 @@
-mode: Mainline
-branches:
-  pull-request:
-    increment: None
-    track-merge-target: true
+mode: ContinuousDeployment
+next-version: 2.24.1
+branches: {}
+ignore:
+  sha: []
+merge-message-formats: {}
