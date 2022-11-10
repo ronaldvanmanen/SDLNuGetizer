@@ -34,6 +34,7 @@ try {
   $MajorMinorPatch = $GitVersion.MajorMinorPatch
   $PackageVersion = $GitVersion.NuGetVersion
 
+  Write-Host "Get SDL2 release for version $MajorMinorPatch..." -ForegroundColor Yellow
   $LatestRelease = Invoke-RestMethod -Headers @{ 'Accept'='application/vnd.github+json'} -Uri "https://api.github.com/repos/libsdl-org/SDL/releases/tags/release-$MajorMinorPatch"
   $LatestVersion = $LatestRelease.name
   $LatestAsset = $LatestRelease.assets | Where-Object { $_.name -Like "SDL2-devel-*-VC.zip" }
