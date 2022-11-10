@@ -1,6 +1,13 @@
 name: nugetize-sdl2
 
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - 'main'
+      - 'release/**'
+  pull_request:
+    branches:
+      - 'main'
 
 jobs:
   build-nuget:
