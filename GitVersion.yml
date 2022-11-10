@@ -1,1 +1,4 @@
 mode: ContinuousDeployment
+branches:
+  pull-request:
+    increment: None
