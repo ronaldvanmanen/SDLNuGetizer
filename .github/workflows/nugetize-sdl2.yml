@@ -1,18 +1,27 @@
 name: nugetize-sdl2
 
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - 'main'
+      - 'release/**'
+  pull_request:
+    branches:
+      - 'main'
 
 jobs:
   build-nuget:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - uses: nuget/setup-nuget@v1
       with:
         nuget-version: '5.x'
     - run: .\scripts\nugetize-sdl2.cmd
       shell: cmd
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: dependencies
         path: .\artifacts\pkg\**\*
@@ -21,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ build-nuget ]
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: dependencies
         path: ./artifacts
@@ -36,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ build-nuget ]
     steps:
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: dependencies
         path: ./artifacts
