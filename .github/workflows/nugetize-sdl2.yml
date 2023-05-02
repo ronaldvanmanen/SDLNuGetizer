@@ -15,7 +15,7 @@ jobs:
   build-nuget:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - uses: nuget/setup-nuget@v1
@@ -36,7 +36,7 @@ jobs:
       with:
         name: dependencies
         path: ./artifacts
-    - uses: actions/setup-dotnet@v1
+    - uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '6.0.x'
         source-url: https://pkgs.dev.azure.com/ronaldvanmanen/_packaging/ronaldvanmanen/nuget/v3/index.json
@@ -51,7 +51,7 @@ jobs:
       with:
         name: dependencies
         path: ./artifacts
-    - uses: actions/setup-dotnet@v1
+    - uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '6.0.x'
         source-url: https://nuget.pkg.github.com/ronaldvanmanen/index.json
