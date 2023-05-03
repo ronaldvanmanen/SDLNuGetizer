@@ -1,6 +1,6 @@
-# SDL2NuGetizer
+# SDL2-packaging
 
-SDL2NuGetizer provides actions for automatically creating NuGet packages of SDL2 binaries.
+SDL2-packaging provides actions for automatically creating NuGet packages of SDL2 binaries.
 
 [![nuget](https://github.com/ronaldvanmanen/SDL2NuGetizer/actions/workflows/nugetize-sdl2.yml/badge.svg)](https://github.com/ronaldvanmanen/SDL2NuGetizer/actions/workflows/nugetize-sdl2.yml)
 
