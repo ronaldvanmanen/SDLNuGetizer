@@ -1,6 +1,8 @@
 mode: ContinuousDeployment
 next-version: 2.26.5
-branches: {}
+branches:
+  main:
+    increment: None
 ignore:
   sha: []
 merge-message-formats: {}
