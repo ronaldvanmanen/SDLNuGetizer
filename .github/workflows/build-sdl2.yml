@@ -1,0 +1,27 @@
+name: build-sdl2
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'release/**'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - run: .\scripts\build-sdl2.cmd
+      shell: cmd
+    - uses: actions/upload-artifact@v3
+      with:
+        name: dependencies
+        path: .\artifacts\pkg\**\*
+        if-no-files-found: error
