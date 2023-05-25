@@ -13,7 +13,11 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      matrix:
+        architecture: [ x64, x86 ]
+        os: [ windows ]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -22,11 +26,15 @@ jobs:
       shell: cmd
     - uses: actions/upload-artifact@v3
       with:
-        name: dependencies
+        name: ${{ matrix.os }}_${{ matrix.architecture }}
         path: .\artifacts\pkg\**\*
         if-no-files-found: error
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      matrix:
+        architecture: [ x64, x86 ]
+        os: [ ubuntu ]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -35,6 +43,6 @@ jobs:
       shell: cmd
     - uses: actions/upload-artifact@v3
       with:
-        name: dependencies
+        name: ${{ matrix.os }}_${{ matrix.architecture }}
         path: .\artifacts\pkg\**\*
         if-no-files-found: error
