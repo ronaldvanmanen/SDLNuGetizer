@@ -24,8 +24,6 @@ ScriptRoot="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 RepoRoot="$ScriptRoot/.."
 
-pushd $RepoRoot
-
 ArtifactsDir="$RepoRoot/artifacts"
 BuildDir="$ArtifactsDir/build"
 DownloadDir="$ArtifactsDir/downloads"
@@ -52,8 +50,6 @@ if [[ ! -z "$architecture" ]]; then
 
   PATH="$DotNetInstallDirectory:$PATH:"
 fi
-
-wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
 
 dotnet tool restore
 
@@ -85,5 +81,3 @@ libpipewire-0.3-dev libwayland-dev libdecor-0-dev
 cmake -S "$DownloadDir/SDL2-$GitVersion" -B "$BuildDir/SDL2-$GitVersion" -DCMAKE_BUILD_TYPE=Release
 cmake --build "$BuildDir/SDL2-$GitVersion" --config Release
 cmake --install "$BuildDir/SDL2-$GitVersion" --prefix "$BinDir/SDL2-$GitVersion"
-
-popd
