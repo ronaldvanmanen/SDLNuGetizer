@@ -26,12 +26,51 @@ RepoRoot="$ScriptRoot/.."
 
 pushd $RepoRoot
 
-MakeDirectory builds downloads artifacts artifacts/bin
+ArtifactsDir="$RepoRoot/artifacts"
+BuildDir="$ArtifactsDir/build"
+DownloadDir="$ArtifactsDir/downloads"
+BinDir="$ArtifactsDir/bin"
 
-pushd downloads/
-wget https://github.com/libsdl-org/SDL/releases/download/release-2.26.5/SDL2-2.26.5.tar.gz
-tar -vxzf SDL2-2.26.5.tar.gz 
-rm -f SDL2-2.26.5.tar.gz 
+MakeDirectory "$ArtifactsDir" "$BuildDir" "$DownloadDir" "$BinDir"
+
+if [[ -z "$architecture" ]]; then
+  architecture="<auto>"
+fi
+
+if [[ ! -z "$architecture" ]]; then
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1
+  export DOTNET_MULTILEVEL_LOOKUP=0
+  export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+
+  DotNetInstallScript="$ArtifactsDir/dotnet-install.sh"
+  wget -O "$DotNetInstallScript" "https://dot.net/v1/dotnet-install.sh"
+
+  DotNetInstallDirectory="$ArtifactsDir/dotnet"
+  MakeDirectory "$DotNetInstallDirectory"
+
+  bash "$DotNetInstallScript" --channel 6.0 --version latest --install-dir "$DotNetInstallDirectory" --architecture "$architecture"
+
+  PATH="$DotNetInstallDirectory:$PATH:"
+fi
+
+wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+
+dotnet tool restore
+
+GitVersion=$(dotnet gitversion /output json /showvariable MajorMinorPatch)
+if [ "$?" != 0 ]; then
+  echo "dotnet gitversion failed"
+  return "$?"
+fi
+
+pushd $DownloadDir
+wget "https://github.com/libsdl-org/SDL/releases/download/release-$GitVersion/SDL2-$GitVersion.tar.gz"
+if [ "$?" != 0 ]; then
+  echo "Download SDL2 failed"
+  return "$?"
+fi
+tar -vxzf SDL2-$GitVersion.tar.gz 
+rm -f SDL2-$GitVersion.tar.gz 
 popd
 
 sudo apt-get update
@@ -40,10 +79,11 @@ pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
 libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
 libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
 libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev
+libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev \
+libpipewire-0.3-dev libwayland-dev libdecor-0-dev
 
-cmake -S ./downloads/SDL2-2.26.5 -B ./builds/SDL2-2.26.5 -DCMAKE_BUILD_TYPE=Release
-cmake --build ./builds/SDL2-2.26.5 --config Release
-cmake --install ./builds/SDL2-2.26.5 --prefix ./artifacts/bin/SDL2-2.26.5
+cmake -S "$DownloadDir/SDL2-$GitVersion" -B "$BuildDir/SDL2-$GitVersion" -DCMAKE_BUILD_TYPE=Release
+cmake --build "$BuildDir/SDL2-$GitVersion" --config Release
+cmake --install "$BuildDir/SDL2-$GitVersion" --prefix "$BinDir/SDL2-$GitVersion"
 
 popd
