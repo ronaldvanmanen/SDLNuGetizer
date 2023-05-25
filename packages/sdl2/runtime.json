@@ -1,5 +1,15 @@
 {
   "runtimes": {
+    "linux-x64": {
+      "SDL2": {
+        "SDL2.runtime.linux-x64": "$version$"
+      }
+    },
+    "linux-x86": {
+      "SDL2": {
+        "SDL2.runtime.linux-x86": "$version$"
+      }
+    },
     "win-x64": {
       "SDL2": {
         "SDL2.runtime.win-x64": "$version$"
