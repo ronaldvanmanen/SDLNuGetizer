@@ -24,12 +24,12 @@ ScriptRoot="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 RepoRoot="$ScriptRoot/.."
 
-ArtifactsDir="$RepoRoot/artifacts"
-BuildDir="$ArtifactsDir/build"
-DownloadDir="$ArtifactsDir/downloads"
-BinDir="$ArtifactsDir/bin"
+ArtifactsRoot="$RepoRoot/artifacts"
+BuildRoot="$ArtifactsRoot/build"
+DownloadRoot="$ArtifactsRoot/downloads"
+BinRoot="$ArtifactsRoot/bin"
 
-MakeDirectory "$ArtifactsDir" "$BuildDir" "$DownloadDir" "$BinDir"
+MakeDirectory "$ArtifactsRoot" "$BuildRoot" "$DownloadRoot" "$BinRoot"
 
 if [[ -z "$architecture" ]]; then
   architecture="<auto>"
@@ -40,10 +40,10 @@ if [[ ! -z "$architecture" ]]; then
   export DOTNET_MULTILEVEL_LOOKUP=0
   export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 
-  DotNetInstallScript="$ArtifactsDir/dotnet-install.sh"
+  DotNetInstallScript="$ArtifactsRoot/dotnet-install.sh"
   wget -O "$DotNetInstallScript" "https://dot.net/v1/dotnet-install.sh"
 
-  DotNetInstallDirectory="$ArtifactsDir/dotnet"
+  DotNetInstallDirectory="$ArtifactsRoot/dotnet"
   MakeDirectory "$DotNetInstallDirectory"
 
   bash "$DotNetInstallScript" --channel 6.0 --version latest --install-dir "$DotNetInstallDirectory" --architecture "$architecture"
@@ -54,16 +54,18 @@ fi
 dotnet tool restore
 
 GitVersion=$(dotnet gitversion /output json /showvariable MajorMinorPatch)
-if [ "$?" != 0 ]; then
+LAST_EXITCODE = $?
+if [ $LAST_EXITCODE != 0 ]; then
   echo "dotnet gitversion failed"
-  return "$?"
+  exit $LAST_EXITCODE
 fi
 
-pushd $DownloadDir
+pushd $DownloadRoot
 wget "https://github.com/libsdl-org/SDL/releases/download/release-$GitVersion/SDL2-$GitVersion.tar.gz"
-if [ "$?" != 0 ]; then
-  echo "Download SDL2 failed"
-  return "$?"
+LAST_EXITCODE = $?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "Download SDL2-$GitVersion.tar.gz failed"
+  exit $LAST_EXITCODE
 fi
 tar -vxzf SDL2-$GitVersion.tar.gz 
 rm -f SDL2-$GitVersion.tar.gz 
@@ -78,6 +80,10 @@ libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
 libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev \
 libpipewire-0.3-dev libwayland-dev libdecor-0-dev
 
-cmake -S "$DownloadDir/SDL2-$GitVersion" -B "$BuildDir/SDL2-$GitVersion" -DCMAKE_BUILD_TYPE=Release
-cmake --build "$BuildDir/SDL2-$GitVersion" --config Release
-cmake --install "$BuildDir/SDL2-$GitVersion" --prefix "$BinDir/SDL2-$GitVersion"
+SourceDir="$DownloadRoot/SDL2-$GitVersion"
+BuildDir="$BuildRoot/SDL2-$GitVersion"
+BinDir="$BinRoot/SDL2-$GitVersion"
+
+cmake -S "$SourceDir" -B "$BuildDir" -DCMAKE_BUILD_TYPE=Release
+cmake --build "$BuildDir" --config Release
+cmake --install "$BuildDir" --prefix "$BinDir"
