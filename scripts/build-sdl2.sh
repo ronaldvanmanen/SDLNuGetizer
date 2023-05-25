@@ -26,10 +26,10 @@ RepoRoot="$ScriptRoot/.."
 
 ArtifactsRoot="$RepoRoot/artifacts"
 BuildRoot="$ArtifactsRoot/build"
-DownloadRoot="$ArtifactsRoot/downloads"
-BinRoot="$ArtifactsRoot/bin"
+SourceRoot="$ArtifactsRoot/src"
+InstallRoot="$ArtifactsRoot/bin"
 
-MakeDirectory "$ArtifactsRoot" "$BuildRoot" "$DownloadRoot" "$BinRoot"
+MakeDirectory "$ArtifactsRoot" "$BuildRoot" "$SourceRoot" "$InstallRoot"
 
 if [[ -z "$architecture" ]]; then
   architecture="<auto>"
@@ -60,7 +60,7 @@ if [ $LAST_EXITCODE != 0 ]; then
   exit $LAST_EXITCODE
 fi
 
-pushd $DownloadRoot
+pushd $SourceRoot
 wget "https://github.com/libsdl-org/SDL/releases/download/release-$GitVersion/SDL2-$GitVersion.tar.gz"
 LAST_EXITCODE = $?
 if [ $LAST_EXITCODE != 0 ]; then
@@ -80,10 +80,10 @@ libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
 libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev \
 libpipewire-0.3-dev libwayland-dev libdecor-0-dev
 
-SourceDir="$DownloadRoot/SDL2-$GitVersion"
+SourceDir="$SourceRoot/SDL2-$GitVersion"
 BuildDir="$BuildRoot/SDL2-$GitVersion"
-BinDir="$BinRoot/SDL2-$GitVersion"
+InstallDir="$InstallRoot/SDL2-$GitVersion"
 
 cmake -S "$SourceDir" -B "$BuildDir" -DCMAKE_BUILD_TYPE=Release
 cmake --build "$BuildDir" --config Release
-cmake --install "$BuildDir" --prefix "$BinDir"
+cmake --install "$BuildDir" --prefix "$InstallDir"
