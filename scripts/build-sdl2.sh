@@ -88,22 +88,48 @@ rm -f SDL2-$GitVersion.tar.gz
 popd
 
 sudo apt-get update
+
 sudo apt-get -y install build-essential git make \
-pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
-libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
-libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
-libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
-libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev \
-libpipewire-0.3-dev libwayland-dev libdecor-0-dev
+  pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
+  libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+  libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
+  libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+  libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev \
+  libpipewire-0.3-dev libwayland-dev libdecor-0-dev
+
+sudo apt-get -y install zip mono-devel
 
 SourceDir="$SourceRoot/SDL2-$GitVersion"
 BuildDir="$BuildRoot/SDL2-$GitVersion"
 InstallDir="$InstallRoot/SDL2-$GitVersion"
 
+CMakeLists="$SourceDir/CMakeLists.txt"
+echo "" >> "$CMakeLists"
+echo "set(CPACK_GENERATOR \"NuGet\")" >> "$CMakeLists"
+echo "set(CPACK_PACKAGE_NAME \"SDL2.runtime.linux-x64\")" >> "$CMakeLists"
+echo "set(CPACK_PACKAGE_VENDOR \"Ronald van Manen\")" >> "$CMakeLists"
+echo "set(CPACK_PACKAGE_DESCRIPTION_SUMMARY \"linux x64 native library for SDL2.\")" >> "$CMakeLists"
+echo "set(CPACK_PACKAGE_VERSION_MAJOR 2)" >> "$CMakeLists"
+echo "set(CPACK_PACKAGE_VERSION_MINOR 26)" >> "$CMakeLists"
+echo "set(CPACK_PACKAGE_VERSION_PATCH 5)" >> "$CMakeLists"
+echo "set(CPACK_NUGET_PACKAGE_NAME \"SDL2.runtime.linux-x64\")" >> "$CMakeLists"
+echo "set(CPACK_NUGET_PACKAGE_VERSION \"$GitVersion\")" >> "$CMakeLists"
+echo "set(CPACK_NUGET_PACKAGE_AUTHORS \"Ronald van Manen\")" >> "$CMakeLists"
+echo "set(CPACK_NUGET_PACKAGE_OWNERS \"Ronald van Manen\")" >> "$CMakeLists"
+echo "set(CPACK_NUGET_PACKAGE_REQUIRE_LICENSE_ACCEPTANCE \"true\")" >> "$CMakeLists"
+echo "set(CPACK_NUGET_PACKAGE_LICENSE_EXPRESSION \"Zlib\")" >> "$CMakeLists"
+echo "set(CPACK_NUGET_PACKAGE_HOMEPAGE_URL \"https://github.com/ronaldvanmanen/SDL2-packaging\")" >> "$CMakeLists"
+echo "set(CPACK_NUGET_PACKAGE_DESCRIPTION \"linux x64 native library for SDL2.\")" >> "$CMakeLists"
+echo "set(CPACK_NUGET_PACKAGE_COPYRIGHT \"Copyright © Ronald van Manen\")" >> "$CMakeLists"
+echo "include(CPack)" >> "$CMakeLists"
+
 cmake -S "$SourceDir" -B "$BuildDir" -G Ninja \
-  -DSDL_TESTS=ON \
+  -DSDL_TESTS=OFF \
   -DSDL_WERROR=ON \
-  -DSDL_INSTALL_TESTS=ON \
+  -DSDL_INSTALL_TESTS=OFF \
   -DCMAKE_BUILD_TYPE=Release
-cmake --build "$BuildDir" --config Release
+
+cmake --build "$BuildDir" --config Release --target package
+
 cmake --install "$BuildDir" --prefix "$InstallDir"
+
