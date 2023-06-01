@@ -22,6 +22,26 @@ done
 
 ScriptRoot="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+architecture=''
+
+while [[ $# -gt 0 ]]; do
+  lower="$(echo "$1" | awk '{print tolower($0)}')"
+  case $lower in
+    --architecture)
+      architecture=$2
+      shift 2
+      ;;
+    *)
+      properties="$properties $1"
+      shift 1
+      ;;
+  esac
+done
+
+if [[ -z "$architecture" ]]; then
+  architecture="<auto>"
+fi
+
 RepoRoot="$ScriptRoot/.."
 
 ArtifactsRoot="$RepoRoot/artifacts"
@@ -30,10 +50,6 @@ SourceRoot="$ArtifactsRoot/src"
 InstallRoot="$ArtifactsRoot/bin"
 
 MakeDirectory "$ArtifactsRoot" "$BuildRoot" "$SourceRoot" "$InstallRoot"
-
-if [[ -z "$architecture" ]]; then
-  architecture="<auto>"
-fi
 
 if [[ ! -z "$architecture" ]]; then
   export DOTNET_CLI_TELEMETRY_OPTOUT=1
