@@ -100,6 +100,7 @@ SourceDir="$SourceRoot/SDL2-$GitVersion"
 BuildDir="$BuildRoot/SDL2-$GitVersion"
 InstallDir="$InstallRoot/SDL2-$GitVersion"
 
-cmake -S "$SourceDir" -B "$BuildDir" -DCMAKE_BUILD_TYPE=Release
+cmake -S "$SourceDir" -B "$BuildDir" -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release
 cmake --build "$BuildDir" --config Release
 cmake --install "$BuildDir" --prefix "$InstallDir"
