@@ -182,18 +182,18 @@ if [ $LAST_EXITCODE != 0 ]; then
   exit "$LAST_EXITCODE"
 fi
 
-echo "Building SDL2 $GitVersion in $BuildDir..."
+echo "$ScriptName: Building SDL2 $GitVersion in $BuildDir..."
 cmake --build "$BuildDir" --config Release --target package
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "Failed to build SDL2 $GitVersion in $BuildDir."
+  echo "$ScriptName: Failed to build SDL2 $GitVersion in $BuildDir."
   exit "$LAST_EXITCODE"
 fi
 
-echo "Installing SDL2 $GitVersion to $InstallDir..."
+echo "$ScriptName: Installing SDL2 $GitVersion to $InstallDir..."
 cmake --install "$BuildDir" --prefix "$InstallDir"
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "Failed to install SDL2 version $GitVersion in $InstallDir."
+  echo "$ScriptName: Failed to install SDL2 version $GitVersion in $InstallDir."
   exit "$LAST_EXITCODE"
 fi
