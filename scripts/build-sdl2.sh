@@ -124,6 +124,8 @@ echo "set(CPACK_NUGET_PACKAGE_COPYRIGHT \"Copyright © Ronald van Manen\")" >> "
 echo "include(CPack)" >> "$CMakeLists"
 
 cmake -S "$SourceDir" -B "$BuildDir" -G Ninja \
+  -DSDL2_DISABLE_SDL2MAIN=ON \
+  -DSDL_INSTALL_TESTS=OFF \
   -DSDL_TESTS=OFF \
   -DSDL_WERROR=ON \
   -DSDL_INSTALL_TESTS=OFF \
