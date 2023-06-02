@@ -22,6 +22,8 @@ done
 
 ScriptRoot="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+ScriptName=$(basename -s '.sh' "$SOURCE")
+
 architecture=''
 
 while [[ $# -gt 0 ]]; do
@@ -52,6 +54,7 @@ InstallRoot="$ArtifactsRoot/bin"
 MakeDirectory "$ArtifactsRoot" "$BuildRoot" "$SourceRoot" "$InstallRoot"
 
 if [[ ! -z "$architecture" ]]; then
+  echo "$ScriptName: Installing dotnet ..."
   export DOTNET_CLI_TELEMETRY_OPTOUT=1
   export DOTNET_MULTILEVEL_LOOKUP=0
   export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
@@ -63,32 +66,62 @@ if [[ ! -z "$architecture" ]]; then
   MakeDirectory "$DotNetInstallDirectory"
 
   bash "$DotNetInstallScript" --channel 6.0 --version latest --install-dir "$DotNetInstallDirectory" --architecture "$architecture"
+  LAST_EXITCODE=$?
+  if [ $LAST_EXITCODE != 0 ]; then
+    echo "$ScriptName: Failed to install dotnet."
+    exit "$LAST_EXITCODE"
+  fi
 
   PATH="$DotNetInstallDirectory:$PATH:"
 fi
 
+echo "$ScriptName: Restoring dotnet tools ..."
 dotnet tool restore
-
-GitVersion=$(dotnet gitversion /output json /showvariable MajorMinorPatch)
-LAST_EXITCODE = $?
+LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "dotnet gitversion failed"
-  exit $LAST_EXITCODE
+  echo "$ScriptName: Failed to restore dotnet tools."
+  exit "$LAST_EXITCODE"
+fi
+
+echo "$ScriptName: Determine which SDL2 version to download and build..."
+GitVersion=$(dotnet gitversion /output json /showvariable MajorMinorPatch)
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "$ScriptName: Failed to determine which SDL2 version to download and build."
+  exit "$LAST_EXITCODE"
 fi
 
 pushd $SourceRoot
-wget "https://github.com/libsdl-org/SDL/releases/download/release-$GitVersion/SDL2-$GitVersion.tar.gz"
-LAST_EXITCODE = $?
+
+DownloadUrl="https://github.com/libsdl-org/SDL/releases/download/release-$GitVersion/SDL2-$GitVersion.tar.gz"
+echo "$ScriptName: Downloading SDL2 $GitVersion from $DownloadUrl..."
+wget "$DownloadUrl"
+LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "Download SDL2-$GitVersion.tar.gz failed"
-  exit $LAST_EXITCODE
+  echo "$ScriptName: Failed to download SDL2 $GitVersion from $DownloadUrl."
+  exit "$LAST_EXITCODE"
 fi
+
+echo "$ScriptName: Extracting SDL2 $GitVersion from $DownloadUrl..."
 tar -vxzf SDL2-$GitVersion.tar.gz 
-rm -f SDL2-$GitVersion.tar.gz 
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "$ScriptName: Failed to download SDL2 version $GitVersion."
+  exit "$LAST_EXITCODE"
+fi
+
+rm -f SDL2-$GitVersion.tar.gz
 popd
 
+echo "$ScriptName: Updating package list..."
 sudo apt-get update
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "$ScriptName: Failed to update package list."
+  exit "$LAST_EXITCODE"
+fi
 
+echo "$ScriptName: Installing packages needed to build SDL2 $GitVersion..."
 sudo apt-get -y install build-essential git make \
   pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
   libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
@@ -96,8 +129,19 @@ sudo apt-get -y install build-essential git make \
   libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
   libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev \
   libpipewire-0.3-dev libwayland-dev libdecor-0-dev
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "$ScriptName: Failed to install packages."
+  exit "$LAST_EXITCODE"
+fi
 
+echo "$ScriptName: Install packages needed to package SDL2..."
 sudo apt-get -y install zip mono-devel
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "$ScriptName: Failed to update package list."
+  exit "$LAST_EXITCODE"
+fi
 
 SourceDir="$SourceRoot/SDL2-$GitVersion"
 BuildDir="$BuildRoot/SDL2-$GitVersion"
@@ -123,15 +167,33 @@ echo "set(CPACK_NUGET_PACKAGE_DESCRIPTION \"linux x64 native library for SDL2.\"
 echo "set(CPACK_NUGET_PACKAGE_COPYRIGHT \"Copyright © Ronald van Manen\")" >> "$CMakeLists"
 echo "include(CPack)" >> "$CMakeLists"
 
+echo "$ScriptName: Setting up build for SDL2 $GitVersion in $BuildDir..."
 cmake -S "$SourceDir" -B "$BuildDir" -G Ninja \
   -DSDL2_DISABLE_SDL2MAIN=ON \
   -DSDL_INSTALL_TESTS=OFF \
   -DSDL_TESTS=OFF \
   -DSDL_WERROR=ON \
-  -DSDL_INSTALL_TESTS=OFF \
+  -DSDL_SHARED=ON \
+  -DSDL_STATIC=OFF \
   -DCMAKE_BUILD_TYPE=Release
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "$ScriptName: Failed to setup build for SDL2 $GitVersion in $BuildDir."
+  exit "$LAST_EXITCODE"
+fi
 
+echo "Building SDL2 $GitVersion in $BuildDir..."
 cmake --build "$BuildDir" --config Release --target package
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "Failed to build SDL2 $GitVersion in $BuildDir."
+  exit "$LAST_EXITCODE"
+fi
 
+echo "Installing SDL2 $GitVersion to $InstallDir..."
 cmake --install "$BuildDir" --prefix "$InstallDir"
-
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "Failed to install SDL2 version $GitVersion in $InstallDir."
+  exit "$LAST_EXITCODE"
+fi
