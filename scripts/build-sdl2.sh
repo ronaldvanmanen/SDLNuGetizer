@@ -50,8 +50,9 @@ ArtifactsRoot="$RepoRoot/artifacts"
 BuildRoot="$ArtifactsRoot/build"
 SourceRoot="$ArtifactsRoot/src"
 InstallRoot="$ArtifactsRoot/bin"
+PackageRoot="$ArtifactsRoot/pkg"
 
-MakeDirectory "$ArtifactsRoot" "$BuildRoot" "$SourceRoot" "$InstallRoot"
+MakeDirectory "$ArtifactsRoot" "$BuildRoot" "$SourceRoot" "$InstallRoot" "$PackageRoot"
 
 if [[ ! -z "$architecture" ]]; then
   echo "$ScriptName: Installing dotnet ..."
@@ -147,26 +148,6 @@ SourceDir="$SourceRoot/SDL2-$GitVersion"
 BuildDir="$BuildRoot/SDL2-$GitVersion"
 InstallDir="$InstallRoot/SDL2-$GitVersion"
 
-CMakeLists="$SourceDir/CMakeLists.txt"
-echo "" >> "$CMakeLists"
-echo "set(CPACK_GENERATOR \"NuGet\")" >> "$CMakeLists"
-echo "set(CPACK_PACKAGE_NAME \"SDL2.runtime.linux-x64\")" >> "$CMakeLists"
-echo "set(CPACK_PACKAGE_VENDOR \"Ronald van Manen\")" >> "$CMakeLists"
-echo "set(CPACK_PACKAGE_DESCRIPTION_SUMMARY \"linux x64 native library for SDL2.\")" >> "$CMakeLists"
-echo "set(CPACK_PACKAGE_VERSION_MAJOR 2)" >> "$CMakeLists"
-echo "set(CPACK_PACKAGE_VERSION_MINOR 26)" >> "$CMakeLists"
-echo "set(CPACK_PACKAGE_VERSION_PATCH 5)" >> "$CMakeLists"
-echo "set(CPACK_NUGET_PACKAGE_NAME \"SDL2.runtime.linux-x64\")" >> "$CMakeLists"
-echo "set(CPACK_NUGET_PACKAGE_VERSION \"$GitVersion\")" >> "$CMakeLists"
-echo "set(CPACK_NUGET_PACKAGE_AUTHORS \"Ronald van Manen\")" >> "$CMakeLists"
-echo "set(CPACK_NUGET_PACKAGE_OWNERS \"Ronald van Manen\")" >> "$CMakeLists"
-echo "set(CPACK_NUGET_PACKAGE_REQUIRE_LICENSE_ACCEPTANCE \"true\")" >> "$CMakeLists"
-echo "set(CPACK_NUGET_PACKAGE_LICENSE_EXPRESSION \"Zlib\")" >> "$CMakeLists"
-echo "set(CPACK_NUGET_PACKAGE_HOMEPAGE_URL \"https://github.com/ronaldvanmanen/SDL2-packaging\")" >> "$CMakeLists"
-echo "set(CPACK_NUGET_PACKAGE_DESCRIPTION \"linux x64 native library for SDL2.\")" >> "$CMakeLists"
-echo "set(CPACK_NUGET_PACKAGE_COPYRIGHT \"Copyright © Ronald van Manen\")" >> "$CMakeLists"
-echo "include(CPack)" >> "$CMakeLists"
-
 echo "$ScriptName: Setting up build for SDL2 $GitVersion in $BuildDir..."
 cmake -S "$SourceDir" -B "$BuildDir" -G Ninja \
   -DSDL2_DISABLE_SDL2MAIN=ON \
@@ -183,7 +164,7 @@ if [ $LAST_EXITCODE != 0 ]; then
 fi
 
 echo "$ScriptName: Building SDL2 $GitVersion in $BuildDir..."
-cmake --build "$BuildDir" --config Release --target package
+cmake --build "$BuildDir" --config Release
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
   echo "$ScriptName: Failed to build SDL2 $GitVersion in $BuildDir."
@@ -195,5 +176,25 @@ cmake --install "$BuildDir" --prefix "$InstallDir"
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
   echo "$ScriptName: Failed to install SDL2 version $GitVersion in $InstallDir."
+  exit "$LAST_EXITCODE"
+fi
+
+RuntimeIdentifier='linux-x64'
+
+PackageName="SDL2.runtime.$RuntimeIdentifier"
+
+echo "$ScriptName: Producing package folder structure SDL2 $GitVersion ..."
+PackageBuildDir="$BuildRoot/$PackageName"
+MakeDirectory "$PackageBuildDir"
+cp -dR "$RepoRoot/packages/$PackageName/." $PackageBuildDir
+PackageRuntimeDir="$PackageBuildDir/runtimes/$RuntimeIdentifier/native"
+MakeDirectory "$PackageRuntimeDir"
+cp -d "$InstallDir/lib/libSDL2"*"so"* "$PackageRuntimeDir"
+
+echo "$ScriptName: Packing SDL2 $GitVersion ..."
+nuget pack "$PackageBuildDir/SDL2.runtime.linux-x64.nuspec" -Properties "version=$GitVersion" -OutputDirectory $PackageRoot
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "$ScriptName: Failed to pack SDL2 $GitVersion."
   exit "$LAST_EXITCODE"
 fi
