@@ -23,9 +23,6 @@ try {
   $ArtifactsRoot = Join-Path -Path $RepoRoot -ChildPath "artifacts"
   New-Directory -Path $ArtifactsRoot
 
-  $BuildRoot = Join-Path -Path $ArtifactsRoot -ChildPath "build"
-  New-Directory -Path $BuildRoot
-
   $SourceRoot = Join-Path -Path $ArtifactsRoot -ChildPath "src"
   New-Directory -Path $SourceRoot
 
@@ -78,7 +75,7 @@ try {
   }
 
   Write-Host "${ScriptName}: Extracting SDL2 $MajorMinorPatch to $SourceRoot..." -ForegroundColor Yellow
-  # Expand-Archive -Path $ArchiveFileName -DestinationPath $SourceRoot -Force *>&1
+  Expand-Archive -Path $ArchiveFileName -DestinationPath $SourceRoot -Force *>&1
   if ($LastExitCode -ne 0) {
     throw "${ScriptName}: Failed to extract SDL2 $MajorMinorPatch to $SourceRoot."
   }
@@ -88,25 +85,25 @@ try {
   Write-Host "${ScriptName}: Producing package folder structure for SDL2 $MajorMinorPatch..." -ForegroundColor Yellow
   $SourceDir = Join-Path -Path $SourceRoot -ChildPath $BaseName
   $PackageName="SDL2"
-  $BuildDir = Join-Path -Path $BuildRoot -ChildPath $PackageName
+  $PackDir = Join-Path -Path $PackageRoot -ChildPath $PackageName
 
-  Copy-File -Path "$RepoRoot\packages\$PackageName\*" -Destination $BuildDir -Force -Recurse
-  Copy-File -Path "$SourceDir\BUGS.txt" $BuildDir
-  Copy-File -Path "$SourceDir\LICENSE.txt" $BuildDir
-  Copy-File -Path "$SourceDir\README.md" $BuildDir
-  Copy-File -Path "$SourceDir\README-SDL.txt" $BuildDir
-  Copy-File -Path "$SourceDir\VERSION.txt" $BuildDir
-  Copy-File -Path "$SourceDir\WhatsNew.txt" $BuildDir
-  Copy-File -Path "$SourceDir\docs\*.md" $BuildDir\docs
-  Copy-File -Path "$SourceDir\include\*.h" $BuildDir\lib\native\include
+  Copy-File -Path "$RepoRoot\packages\$PackageName\*" -Destination $PackDir -Force -Recurse
+  Copy-File -Path "$SourceDir\BUGS.txt" $PackDir
+  Copy-File -Path "$SourceDir\LICENSE.txt" $PackDir
+  Copy-File -Path "$SourceDir\README.md" $PackDir
+  Copy-File -Path "$SourceDir\README-SDL.txt" $PackDir
+  Copy-File -Path "$SourceDir\VERSION.txt" $PackDir
+  Copy-File -Path "$SourceDir\WhatsNew.txt" $PackDir
+  Copy-File -Path "$SourceDir\docs\*.md" $PackDir\docs
+  Copy-File -Path "$SourceDir\include\*.h" $PackDir\lib\native\include
 
   Write-Host "${ScriptName}: Replacing variable `$version`$ in runtime.json with value '$NuGetVersion'..." -ForegroundColor Yellow
-  $RuntimeContent = Get-Content $BuildDir\runtime.json -Raw
+  $RuntimeContent = Get-Content $PackDir\runtime.json -Raw
   $RuntimeContent = $RuntimeContent.replace('$version$', $NuGetVersion)
-  Set-Content $BuildDir\runtime.json $RuntimeContent
+  Set-Content $PackDir\runtime.json $RuntimeContent
 
   Write-Host "${ScriptName}: Building package from SDL2.nuspec..." -ForegroundColor Yellow
-  & nuget pack $BuildDir\SDL2.nuspec -Properties version=$NuGetVersion -OutputDirectory $PackageRoot
+  & nuget pack $PackDir\SDL2.nuspec -Properties version=$NuGetVersion -OutputDirectory $PackageRoot
   if ($LastExitCode -ne 0) {
     throw "${ScriptName}: Failed to pack SDL2 package."
   }

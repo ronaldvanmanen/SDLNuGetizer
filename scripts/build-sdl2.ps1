@@ -106,7 +106,7 @@ try {
 
   Write-Host "${ScriptName}: Producing package folder structure for SDL2 $MajorMinorPatch..." -ForegroundColor Yellow
   $PackageName="SDL2.runtime.$runtime"
-  $PackageBuildDir = Join-Path -Path $BuildRoot -ChildPath $PackageName
+  $PackageBuildDir = Join-Path -Path $PackageRoot -ChildPath $PackageName
   Copy-Item -Path "$RepoRoot\packages\$PackageName\." -Destination $PackageBuildDir -Force -Recurse
   Copy-Item -Path "$SourceDir\LICENSE.txt" $PackageBuildDir
   Copy-Item -Path "$SourceDir\README.md" $PackageBuildDir

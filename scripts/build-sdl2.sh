@@ -206,7 +206,7 @@ fi
 PackageName="SDL2.runtime.$runtime"
 
 echo "$ScriptName: Producing package folder structure for SDL2 $MajorMinorPatch ..."
-PackageBuildDir="$BuildRoot/$PackageName"
+PackageBuildDir="$PackageRoot/$PackageName"
 MakeDirectory "$PackageBuildDir"
 cp -dR "$RepoRoot/packages/$PackageName/." "$PackageBuildDir"
 cp -d "$SourceDir/LICENSE.txt" "$PackageBuildDir"
