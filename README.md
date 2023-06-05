@@ -2,9 +2,6 @@
 
 SDL2-packaging provides actions for automatically creating NuGet packages of SDL2 binaries.
 
-[![nugetize-sdl2](https://github.com/ronaldvanmanen/SDL2-packaging/actions/workflows/nugetize-sdl2.yml/badge.svg)](https://github.com/ronaldvanmanen/SDL2-packaging/actions/workflows/nugetize-sdl2.yml)
-[![update-sdl2](https://github.com/ronaldvanmanen/SDL2-packaging/actions/workflows/update-sdl2.yml/badge.svg)](https://github.com/ronaldvanmanen/SDL2-packaging/actions/workflows/update-sdl2.yml)
-
 ## Table of Contents
 
 * [Code of Conduct](#code-of-conduct)
