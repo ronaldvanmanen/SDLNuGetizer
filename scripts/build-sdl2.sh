@@ -24,24 +24,38 @@ ScriptRoot="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 ScriptName=$(basename -s '.sh' "$SOURCE")
 
-architecture=''
+help=false
+runtime=''
 
 while [[ $# -gt 0 ]]; do
   lower="$(echo "$1" | awk '{print tolower($0)}')"
   case $lower in
-    --architecture)
-      architecture=$2
+    --help)
+      help=true
+      shift 1
+      ;;
+    --runtime)
+      runtime=$2
       shift 2
       ;;
     *)
-      properties="$properties $1"
-      shift 1
-      ;;
   esac
 done
 
-if [[ -z "$architecture" ]]; then
-  architecture="<auto>"
+function Help {
+  echo "  --runtime <value>         Specifies the runtime for the package (linux-x64)"
+  echo "  --help                    Print help and exit"
+}
+
+if $help; then
+  Help
+  exit 0
+fi
+
+if [[ -z "$runtime" ]]; then
+  echo "$ScriptName: runtime identifier missing."
+  Help
+  exit 1
 fi
 
 RepoRoot="$ScriptRoot/.."
@@ -66,7 +80,7 @@ if [[ ! -z "$architecture" ]]; then
   DotNetInstallDirectory="$ArtifactsRoot/dotnet"
   MakeDirectory "$DotNetInstallDirectory"
 
-  bash "$DotNetInstallScript" --channel 6.0 --version latest --install-dir "$DotNetInstallDirectory" --architecture "$architecture"
+  bash "$DotNetInstallScript" --channel 6.0 --version latest --install-dir "$DotNetInstallDirectory"
   LAST_EXITCODE=$?
   if [ $LAST_EXITCODE != 0 ]; then
     echo "$ScriptName: Failed to install dotnet."
@@ -189,9 +203,7 @@ if [ $LAST_EXITCODE != 0 ]; then
   exit "$LAST_EXITCODE"
 fi
 
-RuntimeIdentifier='linux-x64'
-
-PackageName="SDL2.runtime.$RuntimeIdentifier"
+PackageName="SDL2.runtime.$runtime"
 
 echo "$ScriptName: Producing package folder structure for SDL2 $MajorMinorPatch ..."
 PackageBuildDir="$BuildRoot/$PackageName"
@@ -202,7 +214,7 @@ cp -d "$SourceDir/README.md" "$PackageBuildDir"
 cp -d "$SourceDir/README-SDL.txt" "$PackageBuildDir"
 cp -d "$SourceDir/VERSION.txt" "$PackageBuildDir"
 
-PackageRuntimeDir="$PackageBuildDir/runtimes/$RuntimeIdentifier/native"
+PackageRuntimeDir="$PackageBuildDir/runtimes/$runtime/native"
 MakeDirectory "$PackageRuntimeDir"
 cp -d "$InstallDir/lib/libSDL2"*"so"* "$PackageRuntimeDir"
 
