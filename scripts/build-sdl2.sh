@@ -104,14 +104,14 @@ pushd $SourceRoot
 
 if [ ! -f "SDL2-$MajorMinorPatch.tar.gz" ]
 then
-DownloadUrl="https://github.com/libsdl-org/SDL/releases/download/release-$MajorMinorPatch/SDL2-$MajorMinorPatch.tar.gz"
-echo "$ScriptName: Downloading SDL2 $MajorMinorPatch from $DownloadUrl..."
-wget "$DownloadUrl"
-LAST_EXITCODE=$?
-if [ $LAST_EXITCODE != 0 ]; then
+  DownloadUrl="https://github.com/libsdl-org/SDL/releases/download/release-$MajorMinorPatch/SDL2-$MajorMinorPatch.tar.gz"
+  echo "$ScriptName: Downloading SDL2 $MajorMinorPatch from $DownloadUrl..."
+  wget "$DownloadUrl"
+  LAST_EXITCODE=$?
+  if [ $LAST_EXITCODE != 0 ]; then
     echo "$ScriptName: Failed to download SDL2 $MajorMinorPatch from $ArchiveUrl."
-  exit "$LAST_EXITCODE"
-fi
+    exit "$LAST_EXITCODE"
+  fi
 fi
 
 echo "$ScriptName: Extracting SDL2 $MajorMinorPatch from $DownloadUrl..."
@@ -196,7 +196,12 @@ PackageName="SDL2.runtime.$RuntimeIdentifier"
 echo "$ScriptName: Producing package folder structure for SDL2 $MajorMinorPatch ..."
 PackageBuildDir="$BuildRoot/$PackageName"
 MakeDirectory "$PackageBuildDir"
-cp -dR "$RepoRoot/packages/$PackageName/." $PackageBuildDir
+cp -dR "$RepoRoot/packages/$PackageName/." "$PackageBuildDir"
+cp -d "$SourceDir/LICENSE.txt" "$PackageBuildDir"
+cp -d "$SourceDir/README.md" "$PackageBuildDir"
+cp -d "$SourceDir/README-SDL.txt" "$PackageBuildDir"
+cp -d "$SourceDir/VERSION.txt" "$PackageBuildDir"
+
 PackageRuntimeDir="$PackageBuildDir/runtimes/$RuntimeIdentifier/native"
 MakeDirectory "$PackageRuntimeDir"
 cp -d "$InstallDir/lib/libSDL2"*"so"* "$PackageRuntimeDir"
