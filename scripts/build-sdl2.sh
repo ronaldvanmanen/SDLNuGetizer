@@ -102,13 +102,16 @@ fi
 
 pushd $SourceRoot
 
+if [ ! -f "SDL2-$MajorMinorPatch.tar.gz" ]
+then
 DownloadUrl="https://github.com/libsdl-org/SDL/releases/download/release-$MajorMinorPatch/SDL2-$MajorMinorPatch.tar.gz"
 echo "$ScriptName: Downloading SDL2 $MajorMinorPatch from $DownloadUrl..."
 wget "$DownloadUrl"
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "$ScriptName: Failed to download SDL2 $MajorMinorPatch from $DownloadUrl."
+    echo "$ScriptName: Failed to download SDL2 $MajorMinorPatch from $ArchiveUrl."
   exit "$LAST_EXITCODE"
+fi
 fi
 
 echo "$ScriptName: Extracting SDL2 $MajorMinorPatch from $DownloadUrl..."
@@ -118,8 +121,6 @@ if [ $LAST_EXITCODE != 0 ]; then
   echo "$ScriptName: Failed to download SDL2 version $MajorMinorPatch."
   exit "$LAST_EXITCODE"
 fi
-
-rm -f SDL2-$MajorMinorPatch.tar.gz
 
 popd
 
