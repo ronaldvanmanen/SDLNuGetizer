@@ -183,7 +183,7 @@ RuntimeIdentifier='linux-x64'
 
 PackageName="SDL2.runtime.$RuntimeIdentifier"
 
-echo "$ScriptName: Producing package folder structure SDL2 $GitVersion ..."
+echo "$ScriptName: Producing package folder structure for SDL2 $GitVersion ..."
 PackageBuildDir="$BuildRoot/$PackageName"
 MakeDirectory "$PackageBuildDir"
 cp -dR "$RepoRoot/packages/$PackageName/." $PackageBuildDir
