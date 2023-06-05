@@ -1,112 +1,114 @@
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = "Stop"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 function New-Directory([string[]] $Path) {
   if (!(Test-Path -Path $Path)) {
     New-Item -Path $Path -Force -ItemType "Directory" | Out-Null
   }
 }
 
-function Copy-File([string[]] $Path, [string] $Destination, [switch] $Force) {
+function Copy-File([string[]] $Path, [string] $Destination, [switch] $Force, [switch] $Recurse) {
   if (!(Test-Path -Path $Destination)) {
     New-Item -Path $Destination -Force:$Force -ItemType "Directory" | Out-Null
   }
-  Copy-Item -Path $Path -Destination $Destination -Force:$Force
+  Copy-Item -Path $Path -Destination $Destination -Force:$Force -Recurse:$Recurse
 }
 
 try {
+  $ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Name)
+
   $RepoRoot = Join-Path -Path $PSScriptRoot -ChildPath ".."
 
-  $PackagesDir = Join-Path -Path $RepoRoot -ChildPath "packages"
+  $ArtifactsRoot = Join-Path -Path $RepoRoot -ChildPath "artifacts"
+  New-Directory -Path $ArtifactsRoot
 
-  $ArtifactsDir = Join-Path -Path $RepoRoot -ChildPath "artifacts"
-  New-Directory -Path $ArtifactsDir
+  $BuildRoot = Join-Path -Path $ArtifactsRoot -ChildPath "build"
+  New-Directory -Path $BuildRoot
 
-  $ArtifactsPkgDir = Join-Path $ArtifactsDir -ChildPath "pkg"
-  New-Directory -Path $ArtifactsPkgDir
+  $SourceRoot = Join-Path -Path $ArtifactsRoot -ChildPath "src"
+  New-Directory -Path $SourceRoot
 
-  $StagingDir = Join-Path -Path $RepoRoot -ChildPath "staging"
-  New-Directory -Path $StagingDir
+  $InstallRoot = Join-Path -Path $ArtifactsRoot -ChildPath "bin"
+  New-Directory -Path $InstallRoot
 
-  $DownloadsDir = Join-Path -Path $RepoRoot -ChildPath "downloads"
-  New-Directory -Path $DownloadsDir
+  $PackageRoot = Join-Path $ArtifactsRoot -ChildPath "pkg"
+  New-Directory -Path $PackageRoot
 
+  $DotNetInstallScriptUri = "https://dot.net/v1/dotnet-install.ps1"
+  Write-Host "${ScriptName}: Downloading dotnet-install.ps1 script from $DotNetInstallScriptUri..." -ForegroundColor Yellow
+  $DotNetInstallScript = Join-Path -Path $ArtifactsRoot -ChildPath "dotnet-install.ps1"
+  Invoke-WebRequest -Uri $DotNetInstallScriptUri -OutFile $DotNetInstallScript -UseBasicParsing
+
+  Write-Host "${ScriptName}: Installing dotnet 6.0..." -ForegroundColor Yellow
+  $DotNetInstallDirectory = Join-Path -Path $ArtifactsRoot -ChildPath "dotnet"
+  New-Directory -Path $DotNetInstallDirectory
+
+  $env:DOTNET_CLI_TELEMETRY_OPTOUT = 1
+  $env:DOTNET_MULTILEVEL_LOOKUP = 0
+  $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = 1
+
+  # & $DotNetInstallScript -Channel 6.0 -Version latest -InstallDir $DotNetInstallDirectory
+
+  $env:PATH="$DotNetInstallDirectory;$env:PATH"
+
+  Write-Host "${ScriptName}: Restoring dotnet tools..." -ForegroundColor Yellow
   & dotnet tool restore
-
-  $GitVersion = dotnet gitversion /output json | ConvertFrom-Json
-  $MajorMinorPatch = $GitVersion.MajorMinorPatch
-  $PackageVersion = $GitVersion.NuGetVersion
-
-  Write-Host "Get SDL2 release for version $MajorMinorPatch..." -ForegroundColor Yellow
-  $LatestRelease = Invoke-RestMethod -Headers @{ 'Accept'='application/vnd.github+json'} -Uri "https://api.github.com/repos/libsdl-org/SDL/releases/tags/release-$MajorMinorPatch"
-  $LatestVersion = $LatestRelease.name
-  $LatestAsset = $LatestRelease.assets | Where-Object { $_.name -Like "SDL2-devel-*-VC.zip" }
-  $LatestAssetName = $LatestAsset.name
-  $BrowserDownloadUrl = $LatestAsset.browser_download_url
-
-  $ZipDownloadPath = Join-Path $DownloadsDir $LatestAssetName
-
-  if (!(Test-Path $ZipDownloadPath)) {
-    Write-Host "Downloading SDL2 development libraries version '$LatestVersion' from '$BrowserDownloadUrl'..." -ForegroundColor Yellow
-    Invoke-WebRequest -Uri $BrowserDownloadUrl -OutFile $ZipDownloadPath
+  if ($LastExitCode -ne 0) {
+    throw "${ScriptName}: Failed restore dotnet tools."
   }
 
-  Write-Host "Extracting SDL2 development libraries to '$DownloadsDir'..." -ForegroundColor Yellow
-  $ExpandedFiles = Expand-Archive -Path $ZipDownloadPath -DestinationPath $DownloadsDir -Force -Verbose *>&1
+  Write-Host "${ScriptName}: Determine which SDL2 version to download, build, and pack..." -ForegroundColor Yellow
+  $GitVersion = dotnet gitversion /output json | ConvertFrom-Json
+  $MajorMinorPatch = $GitVersion.MajorMinorPatch
+  $NuGetVersion = $GitVersion.NuGetVersion
 
-  Write-Host "Staging SDL2 development libraries to '$StagingDir'..." -ForegroundColor Yellow
-  Copy-Item -Path $PackagesDir\SDL2 -Destination $StagingDir -Force -Recurse
-  Copy-Item -Path $PackagesDir\SDL2.runtime.win-x64 -Destination $StagingDir -Force -Recurse
-  Copy-Item -Path $PackagesDir\SDL2.runtime.win-x86 -Destination $StagingDir -Force -Recurse
+  Push-Location $SourceRoot
 
-  $ExpandedFiles | Foreach-Object {
-    if ($_.message -match "Created '(.*)'.*") {
-      $ExpandedFile = $Matches[1]
-        
-      if (($ExpandedFile -like '*\BUGS.txt') -or
-          ($ExpandedFile -like '*\COPYING.txt') -or
-          ($ExpandedFile -like '*\README.txt') -or
-          ($ExpandedFile -like '*\README-SDL.txt') -or
-          ($ExpandedFile -like '*\WhatsNew.txt')) {
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2 -Force
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x64 -Force
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x86 -Force
-      }
-      elseif ($ExpandedFile -like '*\docs\*.md') {
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2\docs -Force
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x64\docs -Force
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x86\docs -Force
-      }
-      elseif ($ExpandedFile -like '*\include\*.h') {
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2\lib\native\include -Force
-      }
-      elseif ($ExpandedFile -like '*\lib\x64\*.dll') {
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x64\runtimes\win-x64\native -Force
-      }
-      elseif ($ExpandedFile -like '*\lib\x86\*.dll') {
-        Copy-File -Path $ExpandedFile -Destination $StagingDir\SDL2.runtime.win-x86\runtimes\win-x86\native -Force
-      }
+  $BaseName = "SDL2-$MajorMinorPatch"
+
+  $ArchiveFileName = "$BaseName.zip"
+  if (!(Test-Path "$ArchiveFileName")) {
+    $DownloadUrl = "https://github.com/libsdl-org/SDL/releases/download/release-$MajorMinorPatch/$ArchiveFileName"
+    Write-Host "${ScriptName}: Downloading SDL2 $MajorMinorPatch from $DownloadUrl..." -ForegroundColor Yellow
+    Invoke-WebRequest -Uri $DownloadUrl -OutFile $ArchiveFileName
+    if ($LastExitCode -ne 0) {
+      throw "${ScriptName}: Failed to download SDL2 $MajorMinorPatch from $DownloadUrl."
     }
   }
 
-  Write-Host "Replace variable `$version`$ in runtime.json with value '$PackageVersion'..." -ForegroundColor Yellow
-  $RuntimeContent = Get-Content $StagingDir\SDL2\runtime.json -Raw
-  $RuntimeContent = $RuntimeContent.replace('$version$', $PackageVersion)
-  Set-Content $StagingDir\SDL2\runtime.json $RuntimeContent
+  Write-Host "${ScriptName}: Extracting SDL2 $MajorMinorPatch to $SourceRoot..." -ForegroundColor Yellow
+  # Expand-Archive -Path $ArchiveFileName -DestinationPath $SourceRoot -Force *>&1
+  if ($LastExitCode -ne 0) {
+    throw "${ScriptName}: Failed to extract SDL2 $MajorMinorPatch to $SourceRoot."
+  }
 
-  Write-Host "Build 'SDL2' package..." -ForegroundColor Yellow
-  & nuget pack $StagingDir\SDL2\SDL2.nuspec -Properties version=$PackageVersion -OutputDirectory $ArtifactsPkgDir
+  Pop-Location
+
+  Write-Host "${ScriptName}: Producing package folder structure for SDL2 $MajorMinorPatch..." -ForegroundColor Yellow
+  $SourceDir = Join-Path -Path $SourceRoot -ChildPath $BaseName
+  $PackageName="SDL2"
+  $BuildDir = Join-Path -Path $BuildRoot -ChildPath $PackageName
+
+  Copy-File -Path "$RepoRoot\packages\$PackageName\*" -Destination $BuildDir -Force -Recurse
+  Copy-File -Path "$SourceDir\BUGS.txt" $BuildDir
+  Copy-File -Path "$SourceDir\LICENSE.txt" $BuildDir
+  Copy-File -Path "$SourceDir\README.md" $BuildDir
+  Copy-File -Path "$SourceDir\README-SDL.txt" $BuildDir
+  Copy-File -Path "$SourceDir\VERSION.txt" $BuildDir
+  Copy-File -Path "$SourceDir\WhatsNew.txt" $BuildDir
+  Copy-File -Path "$SourceDir\docs\*.md" $BuildDir\docs
+  Copy-File -Path "$SourceDir\include\*.h" $BuildDir\lib\native\include
+
+  Write-Host "${ScriptName}: Replacing variable `$version`$ in runtime.json with value '$NuGetVersion'..." -ForegroundColor Yellow
+  $RuntimeContent = Get-Content $BuildDir\runtime.json -Raw
+  $RuntimeContent = $RuntimeContent.replace('$version$', $NuGetVersion)
+  Set-Content $BuildDir\runtime.json $RuntimeContent
+
+  Write-Host "${ScriptName}: Building package from SDL2.nuspec..." -ForegroundColor Yellow
+  & nuget pack $BuildDir\SDL2.nuspec -Properties version=$NuGetVersion -OutputDirectory $PackageRoot
   if ($LastExitCode -ne 0) {
-    throw "'nuget pack' failed for 'SDL2.nuspec'"
-  }
-  
-  Write-Host "Build 'SDL2.runtime.win-x64' package..." -ForegroundColor Yellow
-  & nuget pack $StagingDir\SDL2.runtime.win-x64\SDL2.runtime.win-x64.nuspec -Properties version=$PackageVersion -OutputDirectory $ArtifactsPkgDir
-  if ($LastExitCode -ne 0) {
-    throw "'nuget pack' failed for 'SDL2.runtime.win-x64.nuspec'"
-  }
-  
-  Write-Host "Build 'SDL2.runtime.win-x86' package..." -ForegroundColor Yellow
-  & nuget pack $StagingDir\SDL2.runtime.win-x86\SDL2.runtime.win-x86.nuspec -Properties version=$PackageVersion -OutputDirectory $ArtifactsPkgDir
-  if ($LastExitCode -ne 0) {
-    throw "'nuget pack' failed for 'SDL2.runtime.win-x86.nuspec'"
+    throw "${ScriptName}: Failed to pack SDL2 package."
   }
 }
 catch {
