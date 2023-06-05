@@ -85,33 +85,42 @@ if [ $LAST_EXITCODE != 0 ]; then
 fi
 
 echo "$ScriptName: Determine which SDL2 version to download and build..."
-GitVersion=$(dotnet gitversion /output json /showvariable MajorMinorPatch)
+MajorMinorPatch=$(dotnet gitversion /output json /showvariable MajorMinorPatch)
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
   echo "$ScriptName: Failed to determine which SDL2 version to download and build."
   exit "$LAST_EXITCODE"
 fi
 
+echo "$ScriptName: Determine version for SDL2 NuGet package..."
+NuGetVersion=$(dotnet gitversion /output json /showvariable NuGetVersion)
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "$ScriptName: Failed to determine version for SDL2 NuGet package."
+  exit "$LAST_EXITCODE"
+fi
+
 pushd $SourceRoot
 
-DownloadUrl="https://github.com/libsdl-org/SDL/releases/download/release-$GitVersion/SDL2-$GitVersion.tar.gz"
-echo "$ScriptName: Downloading SDL2 $GitVersion from $DownloadUrl..."
+DownloadUrl="https://github.com/libsdl-org/SDL/releases/download/release-$MajorMinorPatch/SDL2-$MajorMinorPatch.tar.gz"
+echo "$ScriptName: Downloading SDL2 $MajorMinorPatch from $DownloadUrl..."
 wget "$DownloadUrl"
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "$ScriptName: Failed to download SDL2 $GitVersion from $DownloadUrl."
+  echo "$ScriptName: Failed to download SDL2 $MajorMinorPatch from $DownloadUrl."
   exit "$LAST_EXITCODE"
 fi
 
-echo "$ScriptName: Extracting SDL2 $GitVersion from $DownloadUrl..."
-tar -vxzf SDL2-$GitVersion.tar.gz 
+echo "$ScriptName: Extracting SDL2 $MajorMinorPatch from $DownloadUrl..."
+tar -vxzf SDL2-$MajorMinorPatch.tar.gz 
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "$ScriptName: Failed to download SDL2 version $GitVersion."
+  echo "$ScriptName: Failed to download SDL2 version $MajorMinorPatch."
   exit "$LAST_EXITCODE"
 fi
 
-rm -f SDL2-$GitVersion.tar.gz
+rm -f SDL2-$MajorMinorPatch.tar.gz
+
 popd
 
 echo "$ScriptName: Updating package list..."
@@ -122,7 +131,7 @@ if [ $LAST_EXITCODE != 0 ]; then
   exit "$LAST_EXITCODE"
 fi
 
-echo "$ScriptName: Installing packages needed to build SDL2 $GitVersion..."
+echo "$ScriptName: Installing packages needed to build SDL2 $MajorMinorPatch..."
 sudo apt-get -y install build-essential git make \
   pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
   libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
@@ -144,11 +153,11 @@ if [ $LAST_EXITCODE != 0 ]; then
   exit "$LAST_EXITCODE"
 fi
 
-SourceDir="$SourceRoot/SDL2-$GitVersion"
-BuildDir="$BuildRoot/SDL2-$GitVersion"
-InstallDir="$InstallRoot/SDL2-$GitVersion"
+SourceDir="$SourceRoot/SDL2-$MajorMinorPatch"
+BuildDir="$BuildRoot/SDL2-$MajorMinorPatch"
+InstallDir="$InstallRoot/SDL2-$MajorMinorPatch"
 
-echo "$ScriptName: Setting up build for SDL2 $GitVersion in $BuildDir..."
+echo "$ScriptName: Setting up build for SDL2 $MajorMinorPatch in $BuildDir..."
 cmake -S "$SourceDir" -B "$BuildDir" -G Ninja \
   -DSDL2_DISABLE_SDL2MAIN=ON \
   -DSDL_INSTALL_TESTS=OFF \
@@ -159,23 +168,23 @@ cmake -S "$SourceDir" -B "$BuildDir" -G Ninja \
   -DCMAKE_BUILD_TYPE=Release
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "$ScriptName: Failed to setup build for SDL2 $GitVersion in $BuildDir."
+  echo "$ScriptName: Failed to setup build for SDL2 $MajorMinorPatch in $BuildDir."
   exit "$LAST_EXITCODE"
 fi
 
-echo "$ScriptName: Building SDL2 $GitVersion in $BuildDir..."
+echo "$ScriptName: Building SDL2 $MajorMinorPatch in $BuildDir..."
 cmake --build "$BuildDir" --config Release
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "$ScriptName: Failed to build SDL2 $GitVersion in $BuildDir."
+  echo "$ScriptName: Failed to build SDL2 $MajorMinorPatch in $BuildDir."
   exit "$LAST_EXITCODE"
 fi
 
-echo "$ScriptName: Installing SDL2 $GitVersion to $InstallDir..."
+echo "$ScriptName: Installing SDL2 $MajorMinorPatch to $InstallDir..."
 cmake --install "$BuildDir" --prefix "$InstallDir"
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "$ScriptName: Failed to install SDL2 version $GitVersion in $InstallDir."
+  echo "$ScriptName: Failed to install SDL2 version $MajorMinorPatch in $InstallDir."
   exit "$LAST_EXITCODE"
 fi
 
@@ -183,7 +192,7 @@ RuntimeIdentifier='linux-x64'
 
 PackageName="SDL2.runtime.$RuntimeIdentifier"
 
-echo "$ScriptName: Producing package folder structure for SDL2 $GitVersion ..."
+echo "$ScriptName: Producing package folder structure for SDL2 $MajorMinorPatch ..."
 PackageBuildDir="$BuildRoot/$PackageName"
 MakeDirectory "$PackageBuildDir"
 cp -dR "$RepoRoot/packages/$PackageName/." $PackageBuildDir
@@ -191,10 +200,10 @@ PackageRuntimeDir="$PackageBuildDir/runtimes/$RuntimeIdentifier/native"
 MakeDirectory "$PackageRuntimeDir"
 cp -d "$InstallDir/lib/libSDL2"*"so"* "$PackageRuntimeDir"
 
-echo "$ScriptName: Packing SDL2 $GitVersion ..."
-nuget pack "$PackageBuildDir/SDL2.runtime.linux-x64.nuspec" -Properties "version=$GitVersion" -OutputDirectory $PackageRoot
+echo "$ScriptName: Packing SDL2 $MajorMinorPatch versioned as $NuGetVersion..."
+nuget pack "$PackageBuildDir/SDL2.runtime.linux-x64.nuspec" -Properties "version=$NuGetVersion" -OutputDirectory $PackageRoot
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "$ScriptName: Failed to pack SDL2 $GitVersion."
+  echo "$ScriptName: Failed to pack SDL2 $MajorMinorPatch."
   exit "$LAST_EXITCODE"
 fi
