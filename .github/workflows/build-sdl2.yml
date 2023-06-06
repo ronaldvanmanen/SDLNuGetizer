@@ -55,7 +55,7 @@ jobs:
     - uses: nuget/setup-nuget@v1
       with:
         nuget-version: '5.x'
-    - run: .\scripts\nugetize-sdl2.cmd
+    - run: .\scripts\build-nuget.cmd
       shell: cmd
     - uses: actions/upload-artifact@v3
       with:
