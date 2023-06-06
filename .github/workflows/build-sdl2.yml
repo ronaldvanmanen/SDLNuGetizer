@@ -27,7 +27,7 @@ jobs:
     - uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '6.0.x'
-        source-url: https://pkgs.dev.azure.com/ronaldvanmanen/_packaging/ronaldvanmanen/nuget/v3/index.json
+        source-url: https://pkgs.dev.azure.com/ronaldvanmanen/SDL2Sharp/_packaging/SDL2Sharp/nuget/v3/index.json
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.AZURE_DEVOPS_PAT }}
     - run: .\scripts\build-sdl2.cmd -runtime ${{ matrix.platform.runtime }}
@@ -51,7 +51,7 @@ jobs:
     - uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '6.0.x'
-        source-url: https://pkgs.dev.azure.com/ronaldvanmanen/_packaging/ronaldvanmanen/nuget/v3/index.json
+        source-url: https://pkgs.dev.azure.com/ronaldvanmanen/SDL2Sharp/_packaging/SDL2Sharp/nuget/v3/index.json
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.AZURE_DEVOPS_PAT }}
     - run: ./scripts/build-sdl2.sh --runtime ${{ matrix.platform.runtime }}
@@ -90,7 +90,7 @@ jobs:
     - uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '6.0.x'
-        source-url: https://pkgs.dev.azure.com/ronaldvanmanen/_packaging/ronaldvanmanen/nuget/v3/index.json
+        source-url: https://pkgs.dev.azure.com/ronaldvanmanen/SDL2Sharp/_packaging/SDL2Sharp/nuget/v3/index.json
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.AZURE_DEVOPS_PAT }}
     - run: dotnet nuget push "./artifacts/**/*.nupkg" --api-key AzureDevOps --skip-duplicate
