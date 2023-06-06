@@ -34,7 +34,7 @@ jobs:
       shell: cmd
     - uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.platform.os }}_${{ matrix.platform.architecture }}
+        name: artifacts
         path: .\artifacts\pkg\**\*
         if-no-files-found: error
   build-linux:
@@ -58,7 +58,7 @@ jobs:
       shell: bash
     - uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.platform.os }}_${{ matrix.platform.architecture }}
+        name: artifacts
         path: ./artifacts/pkg/**/*
         if-no-files-found: error
   build-nuget:
@@ -75,7 +75,7 @@ jobs:
       shell: cmd
     - uses: actions/upload-artifact@v3
       with:
-        name: dependencies
+        name: artifacts
         path: .\artifacts\pkg\**\*
         if-no-files-found: error
   publish-artifacts-on-azure:
@@ -85,7 +85,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v3
       with:
-        name: dependencies
+        name: artifacts
         path: ./artifacts
     - uses: actions/setup-dotnet@v3
       with:
@@ -101,7 +101,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v3
       with:
-        name: dependencies
+        name: artifacts
         path: ./artifacts
     - uses: actions/setup-dotnet@v3
       with:
