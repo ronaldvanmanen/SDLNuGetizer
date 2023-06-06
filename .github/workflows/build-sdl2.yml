@@ -13,38 +13,41 @@ on:
 
 jobs:
   build-windows:
-    runs-on: ${{ matrix.os }}-latest
+    name: ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.os }}
     strategy:
       matrix:
-        architecture: [ x64, x86 ]
-        os: [ windows ]
+        platform:
+        - { name: Windows (x64), os: windows-latest, architecture: x64, runtime: win-x64 }
+        - { name: Windows (x86), os: windows-latest, architecture: x86, runtime: win-x86 }
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - run: .\scripts\build-sdl2.cmd
+    - run: .\scripts\build-sdl2.cmd -runtime ${{ matrix.platform.runtime }}
       shell: cmd
     - uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.os }}_${{ matrix.architecture }}
+        name: ${{ matrix.platform.os }}_${{ matrix.platform.architecture }}
         path: .\artifacts\pkg\**\*
         if-no-files-found: error
   build-linux:
-    runs-on: ${{ matrix.os }}-latest
+    name: ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.os }}
     strategy:
       matrix:
-        architecture: [ x64 ]
-        os: [ ubuntu ]
+        platform:
+          - { name: Linux (x64), os: ubuntu-latest, architecture: x64, runtime: linux-x64 }
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - run: ./scripts/build-sdl2.sh
-      shell: cmd
+    - run: ./scripts/build-sdl2.sh --runtime ${{ matrix.platform.runtime }}
+      shell: bash
     - uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.os }}_${{ matrix.architecture }}
-        path: .\artifacts\pkg\**\*
+        name: ${{ matrix.platform.os }}_${{ matrix.platform.architecture }}
+        path: ./artifacts/pkg/**/*
         if-no-files-found: error
   build-nuget:
     runs-on: windows-latest
