@@ -218,7 +218,8 @@ PackageRuntimeDir="$PackageBuildDir/runtimes/$runtime/native"
 MakeDirectory "$PackageRuntimeDir"
 cp -d "$InstallDir/lib/libSDL2"*"so"* "$PackageRuntimeDir"
 
-echo "$ScriptName: Packing SDL2 $MajorMinorPatch versioned as $NuGetVersion..."
+NuGetCliVersion=$(nuget ? | grep -oP 'NuGet Version: \K.+')
+echo "$ScriptName: Packing SDL2 $MajorMinorPatch versioned as $NuGetVersion (using NuGet $NuGetCliVersion)..."
 nuget pack "$PackageBuildDir/SDL2.runtime.linux-x64.nuspec" -Properties "version=$NuGetVersion" -OutputDirectory $PackageRoot
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
