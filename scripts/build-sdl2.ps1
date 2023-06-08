@@ -100,6 +100,8 @@ try {
   Copy-File -Path "$SourceDir\README-SDL.txt" $PackageBuildDir
   Copy-File -Path "$SourceDir\WhatsNew.txt" $PackageBuildDir
   Copy-File -Path "$InstallDir\bin\*.dll" "$PackageBuildDir\runtimes\$runtime\native"
+  Copy-File -Path "$InstallDir\lib\*.lib" "$PackageBuildDir\lib\native"
+  Copy-File -Path "$InstallDir\include\SDL2\*.h" "$PackageBuildDir\lib\native\include"
 
   Write-Host "${ScriptName}: Packing SDL2 (versioned $NuGetVersion)..." -ForegroundColor Yellow
   & nuget pack $PackageBuildDir\$PackageName.nuspec -Properties version=$NuGetVersion -OutputDirectory $PackageRoot
