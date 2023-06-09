@@ -1,6 +1,6 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
-  [ValidateSet("win-x64", "win-x86")][string] $runtime = ""
+  [Parameter(Mandatory)][ValidateSet("win-x64", "win-x86")][string] $runtime = ""
 )
 
 Set-StrictMode -Version 2.0
