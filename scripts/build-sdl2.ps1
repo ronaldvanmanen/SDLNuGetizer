@@ -1,3 +1,26 @@
+<#
+  .SYNOPSIS
+  Builds Windows native NuGet package for SDL2.
+
+  .DESCRIPTION
+  Builds Windows native NuGet package for SDL2.
+
+  .PARAMETER runtime
+  The runtime identifier to use for the native package (i.e. win-x64, win-x86).
+
+  .INPUTS
+  None.
+
+  .OUTPUTS
+  None.
+
+  .EXAMPLE
+  PS> .\build-sdl2 -runtime win-x64
+
+  .EXAMPLE
+  PS> .\build-sdl2 -runtime win-x86
+#>
+
 [CmdletBinding(PositionalBinding=$false)]
 Param(
   [Parameter(Mandatory)][ValidateSet("win-x64", "win-x86")][string] $runtime = ""
