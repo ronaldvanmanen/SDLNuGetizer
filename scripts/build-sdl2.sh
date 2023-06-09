@@ -83,7 +83,7 @@ MakeDirectory "$DotNetInstallDirectory"
 bash "$DotNetInstallScript" --channel 6.0 --version latest --install-dir "$DotNetInstallDirectory"
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "$ScriptName: Failed to install dotnet."
+  echo "$ScriptName: Failed to install dotnet 6.0."
   exit "$LAST_EXITCODE"
 fi
 
@@ -179,11 +179,8 @@ cp -dR "$RepoRoot/packages/$PackageName/." "$PackageBuildDir"
 cp -d "$SourceDir/LICENSE.txt" "$PackageBuildDir"
 cp -d "$SourceDir/README.md" "$PackageBuildDir"
 cp -d "$SourceDir/README-SDL.txt" "$PackageBuildDir"
-cp -d "$SourceDir/VERSION.txt" "$PackageBuildDir"
-
-PackageRuntimeDir="$PackageBuildDir/runtimes/$runtime/native"
-MakeDirectory "$PackageRuntimeDir"
-cp -d "$InstallDir/lib/libSDL2"*"so"* "$PackageRuntimeDir"
+mkdir -p "$PackageBuildDir/runtimes/$runtime/native" && cp -d "$InstallDir/lib/libSDL2"*"so"* $_
+mkdir -p "$PackageBuildDir/lib/native/include" && cp -d "$InstallDir/include/SDL2/"*".h" $_
 
 NuGetCliVersion=$(nuget ? | grep -oP 'NuGet Version: \K.+')
 echo "$ScriptName: Packing SDL2 versioned as $NuGetVersion (using NuGet $NuGetCliVersion)..."
