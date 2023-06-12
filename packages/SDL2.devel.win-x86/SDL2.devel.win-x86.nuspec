@@ -8,7 +8,7 @@
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <license type="expression">Zlib</license>
     <projectUrl>https://github.com/ronaldvanmanen/SDL2-packaging</projectUrl>
-    <description>win x86 native package for SDL2 development.</description>
+    <description>Windows x86 native package for SDL2 development.</description>
     <copyright>Copyright © Ronald van Manen</copyright>
     <repository type="git" url="https://github.com/ronaldvanmanen/SDL2-packaging" />
     <dependencies>
