@@ -43,7 +43,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 function Help {
-  echo "  --runtime <value>         Specifies the runtime for the package (linux-x64)"
+  echo "  --runtime <value>         Specifies the runtime for the package (e.g. linux-x64)"
   echo "  --help                    Print help and exit"
 }
 
@@ -170,23 +170,38 @@ if [ $LAST_EXITCODE != 0 ]; then
   exit "$LAST_EXITCODE"
 fi
 
-PackageName="SDL2.runtime.$runtime"
-PackageBuildDir="$PackageRoot/$PackageName"
-
-echo "$ScriptName: Producing package folder structure for SDL2 in $PackageBuildDir..."
-MakeDirectory "$PackageBuildDir"
-cp -dR "$RepoRoot/packages/$PackageName/." "$PackageBuildDir"
-cp -d "$SourceDir/LICENSE.txt" "$PackageBuildDir"
-cp -d "$SourceDir/README.md" "$PackageBuildDir"
-cp -d "$SourceDir/README-SDL.txt" "$PackageBuildDir"
-mkdir -p "$PackageBuildDir/runtimes/$runtime/native" && cp -d "$InstallDir/lib/libSDL2"*"so"* $_
-mkdir -p "$PackageBuildDir/lib/native/include" && cp -d "$InstallDir/include/SDL2/"*".h" $_
-
 NuGetCliVersion=$(nuget ? | grep -oP 'NuGet Version: \K.+')
-echo "$ScriptName: Packing SDL2 versioned as $NuGetVersion (using NuGet $NuGetCliVersion)..."
-nuget pack "$PackageBuildDir/SDL2.runtime.linux-x64.nuspec" -Properties "version=$NuGetVersion" -OutputDirectory $PackageRoot
+
+RuntimePackageName="SDL2.runtime.$runtime"
+RuntimePackageBuildDir="$PackageRoot/$RuntimePackageName"
+DevelPackageName="SDL2.devel.$runtime"
+DevelPackageBuildDir="$PackageRoot/$DevelPackageName"
+
+echo "$ScriptName: Producing SDL2 runtime package folder structure in $RuntimePackageBuildDir..."
+MakeDirectory "$RuntimePackageBuildDir"
+cp -dR "$RepoRoot/packages/$RuntimePackageName/." "$RuntimePackageBuildDir"
+cp -d "$SourceDir/LICENSE.txt" "$RuntimePackageBuildDir"
+cp -d "$SourceDir/README.md" "$RuntimePackageBuildDir"
+cp -d "$SourceDir/README-SDL.txt" "$RuntimePackageBuildDir"
+mkdir -p "$RuntimePackageBuildDir/runtimes/$runtime/native" && cp -d "$InstallDir/lib/libSDL2"*"so"* $_
+
+echo "$ScriptName: Building SDL2 runtime package (using NuGet $NuGetCliVersion)..."
+nuget pack "$RuntimePackageBuildDir/$RuntimePackageName.nuspec" -Properties "version=$NuGetVersion" -OutputDirectory $PackageRoot
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
-  echo "$ScriptName: Failed to pack SDL2 $MajorMinorPatch."
+  echo "$ScriptName: Failed to build SDL2 runtime package."
+  exit "$LAST_EXITCODE"
+fi
+
+echo "$ScriptName: Producing SDL2 development package folder structure in $DevelPackageBuildDir..."
+MakeDirectory "$DevelPackageBuildDir"
+cp -dR "$RepoRoot/packages/$DevelPackageName/." "$DevelPackageBuildDir"
+cp -dR "$InstallDir/." "$DevelPackageBuildDir"
+
+echo "$ScriptName: Building SDL2 development package (using NuGet $NuGetCliVersion)..."
+nuget pack "$DevelPackageBuildDir/$DevelPackageName.nuspec" -Properties "version=$NuGetVersion" -Properties NoWarn=NU5103,NU5128 -OutputDirectory $PackageRoot
+LAST_EXITCODE=$?
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "$ScriptName: Failed to build SDL2 development package."
   exit "$LAST_EXITCODE"
 fi

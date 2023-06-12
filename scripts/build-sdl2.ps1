@@ -6,7 +6,7 @@
   Builds Windows native NuGet package for SDL2.
 
   .PARAMETER runtime
-  The runtime identifier to use for the native package (i.e. win-x64, win-x86).
+  The runtime identifier to use for the native package (e.g. win-x64, win-x86).
 
   .INPUTS
   None.
@@ -113,23 +113,32 @@ try {
     throw "${ScriptName}: Failed to install SDL2 in $InstallDir."
   }
 
-  $PackageName="SDL2.runtime.$runtime"
-  $PackageBuildDir = Join-Path -Path $PackageRoot -ChildPath $PackageName
-  Write-Host "${ScriptName}: Producing package folder structure for SDL2 in $PackageBuildDir..." -ForegroundColor Yellow
-  Copy-File -Path "$RepoRoot\packages\$PackageName\*" -Destination $PackageBuildDir -Force -Recurse
-  Copy-File -Path "$SourceDir\BUGS.txt" $PackageBuildDir
-  Copy-File -Path "$SourceDir\LICENSE.txt" $PackageBuildDir
-  Copy-File -Path "$SourceDir\README.md" $PackageBuildDir
-  Copy-File -Path "$SourceDir\README-SDL.txt" $PackageBuildDir
-  Copy-File -Path "$SourceDir\WhatsNew.txt" $PackageBuildDir
-  Copy-File -Path "$InstallDir\bin\*.dll" "$PackageBuildDir\runtimes\$runtime\native"
-  Copy-File -Path "$InstallDir\lib\*.lib" "$PackageBuildDir\lib\native"
-  Copy-File -Path "$InstallDir\include\SDL2\*.h" "$PackageBuildDir\lib\native\include"
+  $RuntimePackageName="SDL2.runtime.$runtime"
+  $RuntimePackageBuildDir = Join-Path -Path $PackageRoot -ChildPath $RuntimePackageName
+  $DevelPackageName="SDL2.devel.$runtime"
+  $DevelPackageBuildDir = Join-Path -Path $PackageRoot -ChildPath $DevelPackageName
 
-  Write-Host "${ScriptName}: Packing SDL2 (versioned $NuGetVersion)..." -ForegroundColor Yellow
-  & nuget pack $PackageBuildDir\$PackageName.nuspec -Properties version=$NuGetVersion -OutputDirectory $PackageRoot
+  Write-Host "${ScriptName}: Producing SDL2 runtime package folder structure in $RuntimePackageBuildDir..." -ForegroundColor Yellow
+  Copy-File -Path "$RepoRoot\packages\$RuntimePackageName\*" -Destination $RuntimePackageBuildDir -Force -Recurse
+  Copy-File -Path "$SourceDir\LICENSE.txt" $RuntimePackageBuildDir
+  Copy-File -Path "$SourceDir\README.md" $RuntimePackageBuildDir
+  Copy-File -Path "$SourceDir\README-SDL.txt" $RuntimePackageBuildDir
+  Copy-File -Path "$InstallDir\bin\*.dll" "$RuntimePackageBuildDir\runtimes\$runtime\native"
+
+  Write-Host "${ScriptName}: Building SDL2 runtime package..." -ForegroundColor Yellow
+  & nuget pack $RuntimePackageBuildDir\$RuntimePackageName.nuspec -Properties version=$NuGetVersion -OutputDirectory $PackageRoot
   if ($LastExitCode -ne 0) {
-    throw "${ScriptName}: Failed to pack SDL2 (versioned $NuGetVersion)."
+    throw "${ScriptName}: Failed to build SDL2 runtime package."
+  }
+
+  Write-Host "${ScriptName}: Producing SDL2 development package folder structure in $DevelPackageBuildDir..." -ForegroundColor Yellow
+  Copy-File -Path "$RepoRoot\packages\$DevelPackageName\*" -Destination $DevelPackageBuildDir -Force -Recurse
+  Copy-File -Path "$InstallDir\*" $DevelPackageBuildDir -Force -Recurse
+
+  Write-Host "${ScriptName}: Building SDL2 development package..." -ForegroundColor Yellow
+  & nuget pack $DevelPackageBuildDir\$DevelPackageName.nuspec -Properties version=$NuGetVersion -Properties NoWarn=NU5103,NU5128 -OutputDirectory $PackageRoot
+  if ($LastExitCode -ne 0) {
+    throw "${ScriptName}: Failed to build SDL2 development package."
   }
 }
 catch {
