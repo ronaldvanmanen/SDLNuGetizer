@@ -85,10 +85,10 @@ try {
     throw "${ScriptName}: Failed restore dotnet tools."
   }
 
-  Write-Host "${ScriptName}: Calculating NuGet version for SDL2..." -ForegroundColor Yellow
-  $NuGetVersion = dotnet gitversion /showvariable NuGetVersion /output json
+  Write-Host "${ScriptName}: Calculating SDL2 package version..." -ForegroundColor Yellow
+  $PackageVersion = dotnet gitversion /showvariable NuGetVersion /output json
   if ($LastExitCode -ne 0) {
-    throw "${ScriptName}: Failed calculate NuGet version for SDL2."
+    throw "${ScriptName}: Failed calculate SDL2 package version."
   }
 
   $SourceDir = Join-Path -Path $SourceRoot -ChildPath "SDL"
@@ -126,7 +126,7 @@ try {
   Copy-File -Path "$InstallDir\bin\*.dll" "$RuntimePackageBuildDir\runtimes\$runtime\native"
 
   Write-Host "${ScriptName}: Building SDL2 runtime package..." -ForegroundColor Yellow
-  & nuget pack $RuntimePackageBuildDir\$RuntimePackageName.nuspec -Properties version=$NuGetVersion -OutputDirectory $PackageRoot
+  & nuget pack $RuntimePackageBuildDir\$RuntimePackageName.nuspec -Properties version=$PackageVersion -OutputDirectory $PackageRoot
   if ($LastExitCode -ne 0) {
     throw "${ScriptName}: Failed to build SDL2 runtime package."
   }
@@ -136,7 +136,7 @@ try {
   Copy-File -Path "$InstallDir\*" $DevelPackageBuildDir -Force -Recurse
 
   Write-Host "${ScriptName}: Building SDL2 development package..." -ForegroundColor Yellow
-  & nuget pack $DevelPackageBuildDir\$DevelPackageName.nuspec -Properties version=$NuGetVersion -Properties NoWarn=NU5103,NU5128 -OutputDirectory $PackageRoot
+  & nuget pack $DevelPackageBuildDir\$DevelPackageName.nuspec -Properties version=$PackageVersion -Properties NoWarn=NU5103,NU5128 -OutputDirectory $PackageRoot
   if ($LastExitCode -ne 0) {
     throw "${ScriptName}: Failed to build SDL2 development package."
   }
