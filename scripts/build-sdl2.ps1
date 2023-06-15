@@ -140,7 +140,7 @@ try {
   Copy-File -Path "$SourceDir\WhatsNew.txt" $DevelPackageBuildDir -Force
   Copy-File -Path "$SourceDir\docs\*" "$DevelPackageBuildDir\docs" -Force -Recurse
   Copy-File -Path "$InstallDir\cmake\*" "$DevelPackageBuildDir\cmake" -Force -Recurse
-  Copy-File -Path "$InstallDir\include\*" "$DevelPackageBuildDir\include" -Force -Recurse
+  Copy-File -Path "$InstallDir\include\SDL2\*" "$DevelPackageBuildDir\include" -Force -Recurse
   Copy-File -Path "$InstallDir\lib\*" "$DevelPackageBuildDir\lib\$architecture" -Force -Recurse
 
   Write-Host "${ScriptName}: Building SDL2 development package..." -ForegroundColor Yellow
