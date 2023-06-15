@@ -18,8 +18,8 @@ jobs:
     strategy:
       matrix:
         platform:
-        - { name: Build Windows (x64), os: windows-latest, architecture: x64, runtime: win-x64 }
-        - { name: Build Windows (x86), os: windows-latest, architecture: x86, runtime: win-x86 }
+        - { name: Build Windows (x64), os: windows-latest, architecture: x64 }
+        - { name: Build Windows (x86), os: windows-latest, architecture: x86 }
     steps:
     - uses: actions/checkout@v3
       with:
@@ -31,7 +31,7 @@ jobs:
         source-url: https://pkgs.dev.azure.com/ronaldvanmanen/SDL2Sharp/_packaging/SDL2Sharp/nuget/v3/index.json
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.AZURE_DEVOPS_PAT }}
-    - run: .\scripts\build-sdl2.cmd -runtime ${{ matrix.platform.runtime }}
+    - run: .\scripts\build-sdl2.cmd -architecture ${{ matrix.platform.architecture }}
       shell: cmd
     - uses: actions/upload-artifact@v3
       with:

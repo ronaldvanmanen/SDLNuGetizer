@@ -15,15 +15,15 @@
   None.
 
   .EXAMPLE
-  PS> .\build-sdl2 -runtime win-x64
+  PS> .\build-sdl2 -architecture x64
 
   .EXAMPLE
-  PS> .\build-sdl2 -runtime win-x86
+  PS> .\build-sdl2 -architecture x86
 #>
 
 [CmdletBinding(PositionalBinding=$false)]
 Param(
-  [Parameter(Mandatory)][ValidateSet("win-x64", "win-x86")][string] $runtime = ""
+  [Parameter(Mandatory)][ValidateSet("x64", "x86")][string] $architecture = ""
 )
 
 Set-StrictMode -Version 2.0
@@ -113,17 +113,17 @@ try {
     throw "${ScriptName}: Failed to install SDL2 in $InstallDir."
   }
 
-  $RuntimePackageName="SDL2.runtime.$runtime"
+  $Runtime = "win-${architecture}"
+  $RuntimePackageName = "SDL2.runtime.$Runtime"
   $RuntimePackageBuildDir = Join-Path -Path $PackageRoot -ChildPath $RuntimePackageName
-  $DevelPackageName="SDL2.devel.$runtime"
+  $DevelPackageName = "SDL2.devel.$Runtime"
   $DevelPackageBuildDir = Join-Path -Path $PackageRoot -ChildPath $DevelPackageName
 
   Write-Host "${ScriptName}: Producing SDL2 runtime package folder structure in $RuntimePackageBuildDir..." -ForegroundColor Yellow
   Copy-File -Path "$RepoRoot\packages\$RuntimePackageName\*" -Destination $RuntimePackageBuildDir -Force -Recurse
-  Copy-File -Path "$SourceDir\LICENSE.txt" $RuntimePackageBuildDir
-  Copy-File -Path "$SourceDir\README.md" $RuntimePackageBuildDir
-  Copy-File -Path "$SourceDir\README-SDL.txt" $RuntimePackageBuildDir
-  Copy-File -Path "$InstallDir\bin\*.dll" "$RuntimePackageBuildDir\runtimes\$runtime\native"
+  Copy-File -Path "$SourceDir\LICENSE.txt" $RuntimePackageBuildDir -Force
+  Copy-File -Path "$SourceDir\README-SDL.txt" $RuntimePackageBuildDir -Force
+  Copy-File -Path "$InstallDir\bin\*.dll" "$RuntimePackageBuildDir\runtimes\$Runtime\native" -Force
 
   Write-Host "${ScriptName}: Building SDL2 runtime package..." -ForegroundColor Yellow
   & nuget pack $RuntimePackageBuildDir\$RuntimePackageName.nuspec -Properties version=$PackageVersion -OutputDirectory $PackageRoot
@@ -133,7 +133,15 @@ try {
 
   Write-Host "${ScriptName}: Producing SDL2 development package folder structure in $DevelPackageBuildDir..." -ForegroundColor Yellow
   Copy-File -Path "$RepoRoot\packages\$DevelPackageName\*" -Destination $DevelPackageBuildDir -Force -Recurse
-  Copy-File -Path "$InstallDir\*" $DevelPackageBuildDir -Force -Recurse
+  Copy-File -Path "$SourceDir\BUGS.txt" $DevelPackageBuildDir -Force
+  Copy-File -Path "$SourceDir\LICENSE.txt" $DevelPackageBuildDir -Force
+  Copy-File -Path "$SourceDir\README-SDL.txt" $DevelPackageBuildDir -Force
+  Copy-File -Path "$SourceDir\README.md" $DevelPackageBuildDir -Force
+  Copy-File -Path "$SourceDir\WhatsNew.txt" $DevelPackageBuildDir -Force
+  Copy-File -Path "$SourceDir\docs\*" "$DevelPackageBuildDir\docs" -Force -Recurse
+  Copy-File -Path "$InstallDir\cmake\*" "$DevelPackageBuildDir\cmake" -Force -Recurse
+  Copy-File -Path "$InstallDir\include\*" "$DevelPackageBuildDir\include" -Force -Recurse
+  Copy-File -Path "$InstallDir\lib\*" "$DevelPackageBuildDir\lib\$architecture" -Force -Recurse
 
   Write-Host "${ScriptName}: Building SDL2 development package..." -ForegroundColor Yellow
   & nuget pack $DevelPackageBuildDir\$DevelPackageName.nuspec -Properties version=$PackageVersion -Properties NoWarn=NU5103,NU5128 -OutputDirectory $PackageRoot
