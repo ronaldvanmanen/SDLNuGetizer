@@ -96,7 +96,7 @@ try {
   $InstallDir = Join-Path -Path $InstallRoot -ChildPath "SDL2"
 
   Write-Host "${ScriptName}: Generating build system for SDL2 in $BuildDir..." -ForegroundColor Yellow
-  & cmake -S $SourceDir -B $BuildDir -DSDL2_DISABLE_SDL2MAIN=ON -DSDL_INSTALL_TESTS=OFF -DSDL_TESTS=OFF -DSDL_WERROR=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF -DCMAKE_BUILD_TYPE=Release
+  & cmake -S $SourceDir -B $BuildDir -DSDL_INSTALL_TESTS=OFF -DSDL_TESTS=OFF -DSDL_WERROR=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF -DCMAKE_BUILD_TYPE=Release
   if ($LastExitCode -ne 0) {
     throw "${ScriptName}: Failed to generate build system in $BuildDir."
   }
