@@ -138,10 +138,11 @@ try {
   Copy-File -Path "$SourceDir\README-SDL.txt" $DevelPackageBuildDir -Force
   Copy-File -Path "$SourceDir\README.md" $DevelPackageBuildDir -Force
   Copy-File -Path "$SourceDir\WhatsNew.txt" $DevelPackageBuildDir -Force
-  Copy-File -Path "$SourceDir\docs\*" "$DevelPackageBuildDir\docs" -Force -Recurse
-  Copy-File -Path "$InstallDir\cmake\*" "$DevelPackageBuildDir\cmake" -Force -Recurse
-  Copy-File -Path "$InstallDir\include\SDL2\*" "$DevelPackageBuildDir\include" -Force -Recurse
-  Copy-File -Path "$InstallDir\lib\*" "$DevelPackageBuildDir\lib\$architecture" -Force -Recurse
+  Copy-File -Path "$SourceDir\docs\*" "$DevelPackageBuildDir\docs" -Force
+  Copy-File -Path "$InstallDir\cmake\*" "$DevelPackageBuildDir\cmake" -Force
+  Copy-File -Path "$InstallDir\include\SDL2\*" "$DevelPackageBuildDir\include" -Force
+  Copy-File -Path "$InstallDir\bin\*.dll" "$DevelPackageBuildDir\lib\$architecture" -Force
+  Copy-File -Path "$InstallDir\lib\*.lib" "$DevelPackageBuildDir\lib\$architecture" -Force
 
   Write-Host "${ScriptName}: Building SDL2 development package..." -ForegroundColor Yellow
   & nuget pack $DevelPackageBuildDir\$DevelPackageName.nuspec -Properties version=$PackageVersion -Properties NoWarn=NU5103,NU5128 -OutputDirectory $PackageRoot
