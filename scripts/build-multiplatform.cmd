@@ -1,3 +1,3 @@
 @ECHO OFF
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy ByPass -Command "& """%~dp0build-multiplatform.ps1""" %*"
+pwsh.exe -NoLogo -NoProfile -ExecutionPolicy ByPass -Command "& """%~dp0build-multiplatform.ps1""" %*"
 EXIT /B %ERRORLEVEL%
