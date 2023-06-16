@@ -94,9 +94,15 @@ try {
   $SourceDir = Join-Path -Path $SourceRoot -ChildPath "SDL"
   $BuildDir = Join-Path -Path $BuildRoot -ChildPath "SDL2"
   $InstallDir = Join-Path -Path $InstallRoot -ChildPath "SDL2"
+  $PlatformFlags = ""
+  
+  switch ($architecture) {
+    "x64" { $PlatformFlags = "-A x64" }
+    "x86" { $PlatformFlags = "-A Win32"}
+  }
 
   Write-Host "${ScriptName}: Generating build system for SDL2 in $BuildDir..." -ForegroundColor Yellow
-  & cmake -S $SourceDir -B $BuildDir -DSDL_INSTALL_TESTS=OFF -DSDL_TESTS=OFF -DSDL_WERROR=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF -DCMAKE_BUILD_TYPE=Release
+  & cmake -S $SourceDir -B $BuildDir -DSDL_INSTALL_TESTS=OFF -DSDL_TESTS=OFF -DSDL_WERROR=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF -DCMAKE_BUILD_TYPE=Release $PlatformFlags
   if ($LastExitCode -ne 0) {
     throw "${ScriptName}: Failed to generate build system in $BuildDir."
   }
