@@ -145,7 +145,7 @@ try {
   Copy-File -Path "$InstallDir\lib\*.lib" "$DevelPackageBuildDir\lib\$architecture" -Force
 
   Write-Host "${ScriptName}: Building SDL2 development package..." -ForegroundColor Yellow
-  & nuget pack $DevelPackageBuildDir\$DevelPackageName.nuspec -Properties version=$PackageVersion -Properties NoWarn="NU5103;NU5128" -OutputDirectory $PackageRoot
+  & nuget pack $DevelPackageBuildDir\$DevelPackageName.nuspec -Properties "version=$PackageVersion;NoWarn=NU5103,NU5128" -OutputDirectory $PackageRoot
   if ($LastExitCode -ne 0) {
     throw "${ScriptName}: Failed to build SDL2 development package."
   }
