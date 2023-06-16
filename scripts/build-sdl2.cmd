@@ -25,6 +25,6 @@ IF "%1"=="-architecture" (
     EXIT /B -1
 )
 
-call "%~dp0vcvarsall.cmd" %architecture%
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy ByPass -Command "&."%~dp0build-sdl2.ps1""" %*"
+CALL "%~dp0vcvarsall.cmd" %architecture%
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy ByPass -Command "& """%~dp0build-sdl2.ps1""" %*"
 EXIT /B %ERRORLEVEL%
