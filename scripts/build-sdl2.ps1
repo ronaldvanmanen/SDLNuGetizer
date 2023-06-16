@@ -56,7 +56,7 @@ try {
   $BuildRoot = Join-Path -Path $ArtifactsRoot -ChildPath "build"
   New-Directory -Path $BuildRoot
 
-  $InstallRoot = Join-Path -Path $ArtifactsRoot -ChildPath "bin"
+  $InstallRoot = Join-Path -Path $ArtifactsRoot -ChildPath "install"
   New-Directory -Path $InstallRoot
 
   $PackageRoot = Join-Path $ArtifactsRoot -ChildPath "pkg"
@@ -91,14 +91,15 @@ try {
     throw "${ScriptName}: Failed calculate SDL2 package version."
   }
 
+  $Runtime = "win-${architecture}"
   $SourceDir = Join-Path -Path $SourceRoot -ChildPath "SDL"
-  $BuildDir = Join-Path -Path $BuildRoot -ChildPath "SDL2"
-  $InstallDir = Join-Path -Path $InstallRoot -ChildPath "SDL2"
+  $BuildDir = Join-Path -Path $BuildRoot -ChildPath "SDL2" -AdditionalChildPath "$Runtime"
+  $InstallDir = Join-Path -Path $InstallRoot -ChildPath "SDL2" -AdditionalChildPath "$Runtime"
   $PlatformFlags = ""
   
   switch ($architecture) {
     "x64" { $PlatformFlags = "-A x64" }
-    "x86" { $PlatformFlags = "-A Win32"}
+    "x86" { $PlatformFlags = "-A Win32" }
   }
 
   Write-Host "${ScriptName}: Generating build system for SDL2 in $BuildDir..." -ForegroundColor Yellow
@@ -119,7 +120,6 @@ try {
     throw "${ScriptName}: Failed to install SDL2 in $InstallDir."
   }
 
-  $Runtime = "win-${architecture}"
   $RuntimePackageName = "SDL2.runtime.$Runtime"
   $RuntimePackageBuildDir = Join-Path -Path $PackageRoot -ChildPath $RuntimePackageName
   $DevelPackageName = "SDL2.devel.$Runtime"
