@@ -60,10 +60,10 @@ try {
     throw "${ScriptName}: Failed calculate NuGet version for SDL2."
   }
 
-  Write-Host "${ScriptName}: Producing package folder structure for SDL2..." -ForegroundColor Yellow
   $SourceDir = Join-Path -Path $SourceRoot -ChildPath "SDL"
   $BuildDir = Join-Path -Path $BuildRoot -ChildPath "SDL2.nupkg"
 
+  Write-Host "${ScriptName}: Producing SDL2 multi-platform package folder structure in $BuildDir..." -ForegroundColor Yellow
   Copy-File -Path "$RepoRoot\packages\SDL2\*" -Destination $BuildDir -Force -Recurse
   Copy-File -Path "$SourceDir\BUGS.txt" $BuildDir
   Copy-File -Path "$SourceDir\LICENSE.txt" $BuildDir
@@ -78,10 +78,10 @@ try {
   $RuntimeContent = $RuntimeContent.replace('$version$', $NuGetVersion)
   Set-Content $BuildDir\runtime.json $RuntimeContent
 
-  Write-Host "${ScriptName}: Building package from SDL2.nuspec..." -ForegroundColor Yellow
+  Write-Host "${ScriptName}: Building SDL2 multi-platform package..." -ForegroundColor Yellow
   & nuget pack $BuildDir\SDL2.nuspec -Properties version=$NuGetVersion -OutputDirectory $PackageRoot
   if ($LastExitCode -ne 0) {
-    throw "${ScriptName}: Failed to pack SDL2 package."
+    throw "${ScriptName}: Failed to build SDL2 multi-platform package."
   }
 }
 catch {
