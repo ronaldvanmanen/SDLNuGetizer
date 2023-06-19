@@ -132,9 +132,9 @@ try {
   }
 
   $RuntimePackageName = "SDL2.runtime.$Runtime"
-  $RuntimePackageBuildDir = Join-Path -Path $PackageRoot -ChildPath $RuntimePackageName
+  $RuntimePackageBuildDir = Join-Path -Path $BuildRoot -ChildPath "$RuntimePackageName.nupkg"
   $DevelPackageName = "SDL2.devel.$Runtime"
-  $DevelPackageBuildDir = Join-Path -Path $PackageRoot -ChildPath $DevelPackageName
+  $DevelPackageBuildDir = Join-Path -Path $BuildRoot -ChildPath "$DevelPackageName.nupkg"
 
   Write-Host "${ScriptName}: Producing SDL2 runtime package folder structure in $RuntimePackageBuildDir..." -ForegroundColor Yellow
   Copy-File -Path "$RepoRoot\packages\$RuntimePackageName\*" -Destination $RuntimePackageBuildDir -Force -Recurse
