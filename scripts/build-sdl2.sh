@@ -25,7 +25,7 @@ ScriptRoot="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 ScriptName=$(basename -s '.sh' "$SOURCE")
 
 help=false
-runtime=''
+architecture=''
 
 while [[ $# -gt 0 ]]; do
   lower="$(echo "$1" | awk '{print tolower($0)}')"
@@ -34,8 +34,8 @@ while [[ $# -gt 0 ]]; do
       help=true
       shift 1
       ;;
-    --runtime)
-      runtime=$2
+    --architecture)
+      architecture=$2
       shift 2
       ;;
     *)
@@ -43,7 +43,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 function Help {
-  echo "  --runtime <value>         Specifies the runtime for the package (e.g. linux-x64)"
+  echo "  --architecture <value>    Specifies the architecture for the package (e.g. x64)"
   echo "  --help                    Print help and exit"
 }
 
@@ -52,8 +52,8 @@ if $help; then
   exit 0
 fi
 
-if [[ -z "$runtime" ]]; then
-  echo "$ScriptName: runtime identifier missing."
+if [[ -z "$architecture" ]]; then
+  echo "$ScriptName: architecture missing."
   Help
   exit 1
 fi
@@ -172,9 +172,10 @@ fi
 
 NuGetVersion=$(nuget ? | grep -oP 'NuGet Version: \K.+')
 
-RuntimePackageName="SDL2.runtime.$runtime"
+Runtime="linux-$architecture"
+RuntimePackageName="SDL2.runtime.$Runtime"
 RuntimePackageBuildDir="$PackageRoot/$RuntimePackageName"
-DevelPackageName="SDL2.devel.$runtime"
+DevelPackageName="SDL2.devel.$Runtime"
 DevelPackageBuildDir="$PackageRoot/$DevelPackageName"
 
 echo "$ScriptName: Producing SDL2 runtime package folder structure in $RuntimePackageBuildDir..."
@@ -183,7 +184,7 @@ cp -dR "$RepoRoot/packages/$RuntimePackageName/." "$RuntimePackageBuildDir"
 cp -d "$SourceDir/LICENSE.txt" "$RuntimePackageBuildDir"
 cp -d "$SourceDir/README.md" "$RuntimePackageBuildDir"
 cp -d "$SourceDir/README-SDL.txt" "$RuntimePackageBuildDir"
-mkdir -p "$RuntimePackageBuildDir/runtimes/$runtime/native" && cp -d "$InstallDir/lib/libSDL2"*"so"* $_
+mkdir -p "$RuntimePackageBuildDir/runtimes/$Runtime/native" && cp -d "$InstallDir/lib/libSDL2"*"so"* $_
 
 echo "$ScriptName: Building SDL2 runtime package (using NuGet $NuGetVersion)..."
 nuget pack "$RuntimePackageBuildDir/$RuntimePackageName.nuspec" -Properties "version=$PackageVersion" -OutputDirectory $PackageRoot

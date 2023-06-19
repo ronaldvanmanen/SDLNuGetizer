@@ -44,7 +44,7 @@ jobs:
     strategy:
       matrix:
         platform:
-          - { name: Build Linux (x64), os: ubuntu-latest, architecture: x64, runtime: linux-x64 }
+          - { name: Build Linux (x64), os: ubuntu-latest, architecture: x64 }
     steps:
     - uses: actions/checkout@v3
       with:
@@ -59,7 +59,7 @@ jobs:
     - uses: nuget/setup-nuget@v1
       with:
         nuget-version: '6.x'
-    - run: ./scripts/build-sdl2.sh --runtime ${{ matrix.platform.runtime }}
+    - run: ./scripts/build-sdl2.sh --architecture ${{ matrix.platform.architecture }}
       shell: bash
     - uses: actions/upload-artifact@v3
       with:
