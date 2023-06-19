@@ -25,8 +25,8 @@ try {
   $ArtifactsRoot = Join-Path -Path $RepoRoot -ChildPath "artifacts"
   New-Directory -Path $ArtifactsRoot
 
-  $InstallRoot = Join-Path -Path $ArtifactsRoot -ChildPath "bin"
-  New-Directory -Path $InstallRoot
+  $BuildRoot = Join-Path -Path $ArtifactsRoot -ChildPath "build"
+  New-Directory -Path $BuildRoot
 
   $PackageRoot = Join-Path $ArtifactsRoot -ChildPath "pkg"
   New-Directory -Path $PackageRoot
@@ -62,7 +62,7 @@ try {
 
   Write-Host "${ScriptName}: Producing package folder structure for SDL2..." -ForegroundColor Yellow
   $SourceDir = Join-Path -Path $SourceRoot -ChildPath "SDL"
-  $BuildDir = Join-Path -Path $PackageRoot -ChildPath "SDL2"
+  $BuildDir = Join-Path -Path $BuildRoot -ChildPath "SDL2.nupkg"
 
   Copy-File -Path "$RepoRoot\packages\SDL2\*" -Destination $BuildDir -Force -Recurse
   Copy-File -Path "$SourceDir\BUGS.txt" $BuildDir
