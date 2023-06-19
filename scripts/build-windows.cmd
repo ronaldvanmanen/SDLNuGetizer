@@ -26,5 +26,5 @@ IF "%1"=="-architecture" (
 )
 
 CALL "%~dp0vcvarsall.cmd" %architecture%
-pwsh.exe -NoLogo -NoProfile -ExecutionPolicy ByPass -Command "& """%~dp0build-sdl2.ps1""" %*"
+pwsh.exe -NoLogo -NoProfile -ExecutionPolicy ByPass -Command "& """%~dp0build-windows.ps1""" %*"
 EXIT /B %ERRORLEVEL%
