@@ -103,7 +103,18 @@ try {
   }
 
   Write-Host "${ScriptName}: Generating build system for SDL2 in $BuildDir..." -ForegroundColor Yellow
-  & cmake -S $SourceDir -B $BuildDir -DSDL_INSTALL_TESTS=OFF -DSDL_TESTS=OFF -DSDL_WERROR=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF -DCMAKE_BUILD_TYPE=Release $PlatformFlags
+  & cmake -S $SourceDir -B $BuildDir `
+      -DCMAKE_INSTALL_LIBDIR="lib/$architecture" `
+      -DCMAKE_INSTALL_BINDIR="lib/$architecture" `
+      -DCMAKE_INSTALL_INCLUDEDIR="include" `
+      -DSDL_INSTALL_TESTS=OFF `
+      -DSDL_TESTS=OFF `
+      -DSDL_WERROR=ON `
+      -DSDL_SHARED=ON `
+      -DSDL_STATIC=OFF `
+      -DCMAKE_BUILD_TYPE=Release `
+      $PlatformFlags
+
   if ($LastExitCode -ne 0) {
     throw "${ScriptName}: Failed to generate build system in $BuildDir."
   }
@@ -129,7 +140,7 @@ try {
   Copy-File -Path "$RepoRoot\packages\$RuntimePackageName\*" -Destination $RuntimePackageBuildDir -Force -Recurse
   Copy-File -Path "$SourceDir\LICENSE.txt" $RuntimePackageBuildDir -Force
   Copy-File -Path "$SourceDir\README-SDL.txt" $RuntimePackageBuildDir -Force
-  Copy-File -Path "$InstallDir\bin\*.dll" "$RuntimePackageBuildDir\runtimes\$Runtime\native" -Force
+  Copy-File -Path "$InstallDir\lib\$architecture\*.dll" "$RuntimePackageBuildDir\runtimes\$Runtime\native" -Force
 
   Write-Host "${ScriptName}: Building SDL2 runtime package..." -ForegroundColor Yellow
   & nuget pack $RuntimePackageBuildDir\$RuntimePackageName.nuspec -Properties version=$PackageVersion -OutputDirectory $PackageRoot
@@ -146,9 +157,9 @@ try {
   Copy-File -Path "$SourceDir\WhatsNew.txt" $DevelPackageBuildDir -Force
   Copy-File -Path "$SourceDir\docs\*" "$DevelPackageBuildDir\docs" -Force
   Copy-File -Path "$InstallDir\cmake\*" "$DevelPackageBuildDir\cmake" -Force
-  Copy-File -Path "$InstallDir\include\SDL2\*" "$DevelPackageBuildDir\include" -Force
-  Copy-File -Path "$InstallDir\bin\*.dll" "$DevelPackageBuildDir\lib\$architecture" -Force
-  Copy-File -Path "$InstallDir\lib\*.lib" "$DevelPackageBuildDir\lib\$architecture" -Force
+  Copy-File -Path "$InstallDir\include\SDL2\*" "$DevelPackageBuildDir\include\SDL2" -Force
+  Copy-File -Path "$InstallDir\lib\$architecture\*.lib" "$DevelPackageBuildDir\lib\$architecture" -Force
+  Copy-File -Path "$InstallDir\lib\$architecture\*.dll" "$DevelPackageBuildDir\lib\$architecture" -Force
 
   Write-Host "${ScriptName}: Building SDL2 development package..." -ForegroundColor Yellow
   & nuget pack $DevelPackageBuildDir\$DevelPackageName.nuspec -Properties "version=$PackageVersion;NoWarn=NU5103,NU5128" -OutputDirectory $PackageRoot
