@@ -127,9 +127,10 @@ if [ $LAST_EXITCODE != 0 ]; then
   exit "$LAST_EXITCODE"
 fi
 
+Runtime="linux-$architecture"
 SourceDir="$SourceRoot/SDL"
-BuildDir="$BuildRoot/SDL2"
-InstallDir="$InstallRoot/SDL2"
+BuildDir="$BuildRoot/SDL2/$Runtime"
+InstallDir="$InstallRoot/SDL2/$Runtime"
 
 echo "$ScriptName: Setting up build for SDL2 in $BuildDir..."
 cmake -S "$SourceDir" -B "$BuildDir" -G Ninja \
@@ -165,7 +166,6 @@ fi
 
 NuGetVersion=$(nuget ? | grep -oP 'NuGet Version: \K.+')
 
-Runtime="linux-$architecture"
 RuntimePackageName="SDL2.runtime.$Runtime"
 RuntimePackageBuildDir="$PackageRoot/$RuntimePackageName"
 DevelPackageName="SDL2.devel.$Runtime"
