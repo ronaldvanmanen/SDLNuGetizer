@@ -107,6 +107,7 @@ try {
       -DCMAKE_INSTALL_LIBDIR="lib/$architecture" `
       -DCMAKE_INSTALL_BINDIR="lib/$architecture" `
       -DCMAKE_INSTALL_INCLUDEDIR="include" `
+      -DSDL_VENDOR_INFO="Ronald van Manen" `
       -DSDL_INSTALL_TESTS=OFF `
       -DSDL_TESTS=OFF `
       -DSDL_WERROR=ON `

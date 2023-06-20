@@ -141,6 +141,7 @@ InstallDir="$InstallRoot/SDL2"
 
 echo "$ScriptName: Setting up build for SDL2 in $BuildDir..."
 cmake -S "$SourceDir" -B "$BuildDir" -G Ninja \
+  -DSDL_VENDOR_INFO="Ronald van Manen" \
   -DSDL2_DISABLE_SDL2MAIN=ON \
   -DSDL_INSTALL_TESTS=OFF \
   -DSDL_TESTS=OFF \
