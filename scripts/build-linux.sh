@@ -64,7 +64,7 @@ SourceRoot="$RepoRoot/sources"
 
 ArtifactsRoot="$RepoRoot/artifacts"
 BuildRoot="$ArtifactsRoot/build"
-InstallRoot="$ArtifactsRoot/bin"
+InstallRoot="$ArtifactsRoot/install"
 PackageRoot="$ArtifactsRoot/pkg"
 
 MakeDirectory "$ArtifactsRoot" "$BuildRoot" "$InstallRoot" "$PackageRoot"
