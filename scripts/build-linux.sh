@@ -113,25 +113,17 @@ if [ $LAST_EXITCODE != 0 ]; then
   exit "$LAST_EXITCODE"
 fi
 
-echo "$ScriptName: Installing packages needed to build SDL2 $MajorMinorPatch..."
+echo "$ScriptName: Installing packages needed to build SDL2..."
 sudo apt-get -y install build-essential git make \
   pkg-config cmake ninja-build gnome-desktop-testing libasound2-dev libpulse-dev \
   libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
   libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \
   libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
   libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev fcitx-libs-dev \
-  libpipewire-0.3-dev libwayland-dev libdecor-0-dev
+  libpipewire-0.3-dev libwayland-dev libdecor-0-dev mono-devel
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
   echo "$ScriptName: Failed to install packages."
-  exit "$LAST_EXITCODE"
-fi
-
-echo "$ScriptName: Install packages needed to package SDL2..."
-sudo apt-get -y install zip mono-devel
-LAST_EXITCODE=$?
-if [ $LAST_EXITCODE != 0 ]; then
-  echo "$ScriptName: Failed to update package list."
   exit "$LAST_EXITCODE"
 fi
 
