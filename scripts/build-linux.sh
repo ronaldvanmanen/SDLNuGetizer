@@ -167,9 +167,9 @@ fi
 NuGetVersion=$(nuget ? | grep -oP 'NuGet Version: \K.+')
 
 RuntimePackageName="SDL2.runtime.$Runtime"
-RuntimePackageBuildDir="$PackageRoot/$RuntimePackageName"
+RuntimePackageBuildDir="$BuildRoot/$RuntimePackageName.nupkg"
 DevelPackageName="SDL2.devel.$Runtime"
-DevelPackageBuildDir="$PackageRoot/$DevelPackageName"
+DevelPackageBuildDir="$BuildRoot/$DevelPackageName.nupkg"
 
 echo "$ScriptName: Producing SDL2 runtime package folder structure in $RuntimePackageBuildDir..."
 MakeDirectory "$RuntimePackageBuildDir"
