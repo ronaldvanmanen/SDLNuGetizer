@@ -1,4 +1,4 @@
-name: update-sdl2
+name: update-dependencies
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-sdl2:
+  update-dependencies:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
