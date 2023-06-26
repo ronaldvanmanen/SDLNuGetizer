@@ -11,8 +11,5 @@
     <description>Windows x64 native runtime library for SDL2.</description>
     <copyright>Copyright © Ronald van Manen</copyright>
     <repository type="git" url="https://github.com/ronaldvanmanen/SDL2-packaging" />
-    <dependencies>
-      <group targetFramework="native0.0" />
-    </dependencies>
   </metadata>
 </package>
