@@ -1,4 +1,3 @@
 [submodule "sources/SDL"]
 	path = sources/SDL
 	url = https://github.com/libsdl-org/SDL
-	branch = release-2.26.x
