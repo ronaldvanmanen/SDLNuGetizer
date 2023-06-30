@@ -136,11 +136,11 @@ echo "$ScriptName: Setting up build for SDL2 in $BuildDir..."
 cmake -S "$SourceDir" -B "$BuildDir" -G Ninja \
   -DSDL_VENDOR_INFO="Ronald van Manen" \
   -DSDL2_DISABLE_SDL2MAIN=ON \
-  -DSDL_INSTALL_TESTS=OFF \
-  -DSDL_TESTS=OFF \
+  -DSDL_INSTALL_TESTS=ON \
+  -DSDL_TESTS=ON \
   -DSDL_WERROR=ON \
   -DSDL_SHARED=ON \
-  -DSDL_STATIC=OFF \
+  -DSDL_STATIC=ON \
   -DCMAKE_BUILD_TYPE=Release
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
@@ -153,6 +153,13 @@ cmake --build "$BuildDir" --config Release
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
   echo "$ScriptName: Failed to build SDL2 in $BuildDir."
+  exit "$LAST_EXITCODE"
+fi
+
+echo "$ScriptName: Running SDL2 build-time tests in $BuildDir..."
+ctest -VV --test-dir $BuildDir -C Release
+if [ $LAST_EXITCODE != 0 ]; then
+  echo "$ScriptName: Failed to run SDL2 build-time tests in $BuildDir."
   exit "$LAST_EXITCODE"
 fi
 
