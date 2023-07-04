@@ -108,11 +108,11 @@ try {
       -DCMAKE_INSTALL_BINDIR="lib/$architecture" `
       -DCMAKE_INSTALL_INCLUDEDIR="include" `
       -DSDL_VENDOR_INFO="Ronald van Manen" `
-      -DSDL_INSTALL_TESTS=OFF `
-      -DSDL_TESTS=OFF `
+      -DSDL_INSTALL_TESTS=ON `
+      -DSDL_TESTS=ON `
       -DSDL_WERROR=ON `
       -DSDL_SHARED=ON `
-      -DSDL_STATIC=OFF `
+      -DSDL_STATIC=ON `
       -DCMAKE_BUILD_TYPE=Release `
       $PlatformFlags
 
@@ -124,6 +124,12 @@ try {
   & cmake --build $BuildDir --config Release
   if ($LastExitCode -ne 0) {
     throw "${ScriptName}: Failed to build SDL2 in $BuildDir."
+  }
+
+  Write-Host "${ScriptName}: Running SDL2 build-time tests in $BuildDir..." -ForegroundColor Yellow
+  ctest -VV --test-dir $BuildDir -C Release
+  if ($LastExitCode -ne 0) {
+    throw "${ScriptName}: Failed to run SDL2 build-time tests in $BuildDir."
   }
 
   Write-Host "${ScriptName}: Installing SDL2 in $InstallDir..." -ForegroundColor Yellow
