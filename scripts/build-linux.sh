@@ -149,7 +149,7 @@ if [ $LAST_EXITCODE != 0 ]; then
 fi
 
 echo "$ScriptName: Building SDL2 in $BuildDir..."
-cmake --build "$BuildDir" --config Release
+cmake --build "$BuildDir" --config Release --parallel
 LAST_EXITCODE=$?
 if [ $LAST_EXITCODE != 0 ]; then
   echo "$ScriptName: Failed to build SDL2 in $BuildDir."

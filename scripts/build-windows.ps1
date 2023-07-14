@@ -121,7 +121,7 @@ try {
   }
 
   Write-Host "${ScriptName}: Building SDL2 in $BuildDir..." -ForegroundColor Yellow
-  & cmake --build $BuildDir --config Release
+  & cmake --build $BuildDir --config Release --parallel
   if ($LastExitCode -ne 0) {
     throw "${ScriptName}: Failed to build SDL2 in $BuildDir."
   }
