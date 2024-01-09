@@ -6,13 +6,9 @@
     "build": {
       "type": "object",
       "properties": {
-        "Configuration": {
+        "Architecture": {
           "type": "string",
-          "description": "Configuration to build - Default is 'Debug' (local) or 'Release' (server)",
-          "enum": [
-            "Debug",
-            "Release"
-          ]
+          "description": "Specifies the architecture for the package (e.g. x64)"
         },
         "Continue": {
           "type": "boolean",
@@ -72,10 +68,8 @@
           "items": {
             "type": "string",
             "enum": [
-              "Clean",
-              "Compile",
               "InstallLinuxDependencies",
-              "Restore"
+              "SetupLinuxBuild"
             ]
           }
         },
@@ -85,10 +79,8 @@
           "items": {
             "type": "string",
             "enum": [
-              "Clean",
-              "Compile",
               "InstallLinuxDependencies",
-              "Restore"
+              "SetupLinuxBuild"
             ]
           }
         },

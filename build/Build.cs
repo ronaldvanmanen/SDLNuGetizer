@@ -16,7 +16,7 @@ using static System.Runtime.InteropServices.RuntimeInformation;
 
 class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.Compile);
+    public static int Main () => Execute<Build>(x => x.SetupLinuxBuild);
 
     readonly List<string> LinuxDependencies = new()
     {
@@ -56,40 +56,62 @@ class Build : NukeBuild
     };
 
 
-    [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
-    readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    [Parameter("Specifies the architecture for the package (e.g. x64)")]
+    readonly string Architecture;
 
-    [LocalPath("/usr/bin/sudo")]
-    readonly Tool Sudo;
+    string Runtime => $"linux-{Architecture:nq}";
 
-    Target Clean => _ => _
-        .Before(Restore)
-        .Executes(() =>
-        {
-        });
+    AbsolutePath SourceRootDirectory => RootDirectory / "sources";
+
+    AbsolutePath SourceDirectory => SourceRootDirectory / "SDL";
+
+    AbsolutePath ArtifactsRootDirectory => RootDirectory / "artifacts";
+
+    AbsolutePath BuildRootDirectory => ArtifactsRootDirectory / "build";
+    
+    AbsolutePath BuildDirectory => BuildRootDirectory / "SDL2" / Runtime;
+
+    AbsolutePath InstallRootDirectory => ArtifactsRootDirectory / "install";
+
+    AbsolutePath InstallDirectory => InstallRootDirectory / "SDL2" / Runtime;
+
+    AbsolutePath PackageRoot => ArtifactsRootDirectory / "pkg";
+
+    Tool Sudo => ToolResolver.GetPathTool("sudo");
+
+    Tool CMake => ToolResolver.GetPathTool("cmake");
 
     Target InstallLinuxDependencies => _ => _
         .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Linux))
         .Executes(() =>
         {
             Sudo($"apt-get update");
-            
-            foreach (var dependency in LinuxDependencies)
-            {
-                Sudo($"apt-get -y install {dependency}");
-            }
+            var dependencies = string.Join(' ', LinuxDependencies);
+            Sudo($"apt-get -y install {dependencies:nq}");
         });
 
-    Target Restore => _ => _
-        .Executes(() =>
-        {
-        });
-
-    Target Compile => _ => _
-        .DependsOn(Restore)
+    Target SetupLinuxBuild => _ => _
         .DependsOn(InstallLinuxDependencies)
         .Executes(() =>
         {
+            // NOTE: Nuke uses System.Diagnostics.Process.Start to start external processes. See the documentation on
+            // https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.arguments for details
+            // on how to properly escaped arguments containing spaces.
+            var arguments = new string[]
+            {
+                $"-S \\\"{SourceDirectory:nq}\\\"",
+                $"-B \\\"{BuildDirectory:nq}\\\"",
+                $"-G Ninja",
+                $"-DSDL_VENDOR_INFO=\\\"Ronald van Manen\\\"",
+                $"-DSDL2_DISABLE_SDL2MAIN=ON",
+                $"-DSDL_INSTALL_TESTS=ON",
+                $"-DSDL_TESTS=ON",
+                $"-DSDL_WERROR=ON",
+                $"-DSDL_SHARED=ON",
+                $"-DSDL_STATIC=ON",
+                $"-DCMAKE_BUILD_TYPE=Release"
+            };
+            var argumentString = string.Join(' ', arguments);
+            CMake(argumentString);
         });
-
 }
