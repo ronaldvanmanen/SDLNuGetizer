@@ -128,6 +128,8 @@ class Build : NukeBuild
 
     Tool CMake => ToolResolver.GetPathTool("cmake");
 
+    Tool CTest => ToolResolver.GetPathTool("ctest");
+
     Target InstallProjectBuildDependencies => _ => _
         .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Linux))
         .Executes(() =>
@@ -202,8 +204,16 @@ class Build : NukeBuild
             CMake($"--build {BuildDirectory} --config Release --parallel");
         });
 
-    Target InstallProject => _ => _
+    Target TestProject => _ => _
+        .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Windows))
         .DependsOn(BuildProject)
+        .Executes(() =>
+        {
+            CTest($"-VV --test-dir {BuildDirectory} -C Release");
+        });
+
+    Target InstallProject => _ => _
+        .DependsOn(TestProject)
         .Executes(() =>
         {
             CMake($"--install {BuildDirectory} --prefix {InstallDirectory}");
