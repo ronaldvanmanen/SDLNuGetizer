@@ -69,6 +69,7 @@
             "type": "string",
             "enum": [
               "InstallLinuxDependencies",
+              "LinuxBuild",
               "SetupLinuxBuild"
             ]
           }
@@ -80,6 +81,7 @@
             "type": "string",
             "enum": [
               "InstallLinuxDependencies",
+              "LinuxBuild",
               "SetupLinuxBuild"
             ]
           }

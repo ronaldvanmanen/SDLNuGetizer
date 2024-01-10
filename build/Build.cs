@@ -16,7 +16,7 @@ using static System.Runtime.InteropServices.RuntimeInformation;
 
 class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.SetupLinuxBuild);
+    public static int Main () => Execute<Build>(x => x.LinuxBuild);
 
     readonly List<string> LinuxDependencies = new()
     {
@@ -99,10 +99,10 @@ class Build : NukeBuild
             // on how to properly escaped arguments containing spaces.
             var arguments = new string[]
             {
-                $"-S \\\"{SourceDirectory:nq}\\\"",
-                $"-B \\\"{BuildDirectory:nq}\\\"",
-                $"-G Ninja",
-                $"-DSDL_VENDOR_INFO=\\\"Ronald van Manen\\\"",
+                $"-S", $"{SourceDirectory:dn}",
+                $"-B", $"{BuildDirectory:dn}",
+                $"-G", $"Ninja",
+                $"-DSDL_VENDOR_INFO=Ronald\\x20van\\x20Manen",
                 $"-DSDL2_DISABLE_SDL2MAIN=ON",
                 $"-DSDL_INSTALL_TESTS=ON",
                 $"-DSDL_TESTS=ON",
@@ -113,5 +113,12 @@ class Build : NukeBuild
             };
             var argumentString = string.Join(' ', arguments);
             CMake(argumentString);
+        });
+
+    Target LinuxBuild => _ => _
+        .DependsOn(SetupLinuxBuild)
+        .Executes(() => 
+        {
+            CMake($"--build {BuildDirectory} --config Release --parallel");
         });
 }
