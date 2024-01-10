@@ -11,7 +11,7 @@ using static Nuke.Common.Tools.NuGet.NuGetTasks;
 
 class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.BuildRuntimePackage);
+    public static int Main () => Execute<Build>(x => x.Pack);
 
     readonly List<string> LinuxDependencies = new()
     {
@@ -82,6 +82,14 @@ class Build : NukeBuild
     AbsolutePath RuntimePackageTemplateDirectory => RootDirectory / "packages" / $"{RuntimePackageName}";
 
     AbsolutePath RuntimePackageBuildDirectory => BuildRootDirectory / $"{RuntimePackageName}.nupkg";
+
+    string DevelopmentPackageName => $"SDL2.devel.{Runtime}";
+
+    string DevelopmentPackageSpec => $"{DevelopmentPackageName}.nuspec";
+
+    AbsolutePath DevelopmentPackageTemplateDirectory => RootDirectory / "packages" / $"{DevelopmentPackageName}";
+
+    AbsolutePath DevelopmentPackageBuildDirectory => BuildRootDirectory / $"{DevelopmentPackageName}.nupkg";
 
     Tool Sudo => ToolResolver.GetPathTool("sudo");
 
@@ -164,4 +172,28 @@ class Build : NukeBuild
 
             NuGetPack(packSettings);
         });
+
+    Target BuildDevelopmentPackage => _ => _
+        .DependsOn(InstallLinuxBuild)
+        .Executes(() =>
+        {
+            DevelopmentPackageBuildDirectory.CreateOrCleanDirectory();
+
+            CopyDirectoryRecursively(DevelopmentPackageTemplateDirectory, DevelopmentPackageBuildDirectory, DirectoryExistsPolicy.Merge);
+            CopyDirectoryRecursively(InstallDirectory, DevelopmentPackageBuildDirectory, DirectoryExistsPolicy.Merge);
+
+            var packSettings = new NuGetPackSettings()
+                .SetProcessWorkingDirectory(DevelopmentPackageBuildDirectory)
+                .SetTargetPath(DevelopmentPackageSpec)
+                .SetOutputDirectory(PackageRootDirectory)
+                .SetVersion(GitVersion.NuGetVersion)
+                .SetNoPackageAnalysis(true);
+
+            NuGetPack(packSettings);
+        });
+
+    Target Pack => _ => _
+        .DependsOn(BuildRuntimePackage)
+        .DependsOn(BuildDevelopmentPackage)
+        .Executes(() => {});
 }
