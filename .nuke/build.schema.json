@@ -68,6 +68,7 @@
           "items": {
             "type": "string",
             "enum": [
+              "InstallLinuxBuild",
               "InstallLinuxDependencies",
               "LinuxBuild",
               "SetupLinuxBuild"
@@ -80,6 +81,7 @@
           "items": {
             "type": "string",
             "enum": [
+              "InstallLinuxBuild",
               "InstallLinuxDependencies",
               "LinuxBuild",
               "SetupLinuxBuild"

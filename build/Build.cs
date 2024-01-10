@@ -16,7 +16,7 @@ using static System.Runtime.InteropServices.RuntimeInformation;
 
 class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.LinuxBuild);
+    public static int Main () => Execute<Build>(x => x.InstallLinuxBuild);
 
     readonly List<string> LinuxDependencies = new()
     {
@@ -117,8 +117,15 @@ class Build : NukeBuild
 
     Target LinuxBuild => _ => _
         .DependsOn(SetupLinuxBuild)
-        .Executes(() => 
+        .Executes(() =>
         {
             CMake($"--build {BuildDirectory} --config Release --parallel");
+        });
+
+    Target InstallLinuxBuild => _ => _
+        .DependsOn(LinuxBuild)
+        .Executes(() =>
+        {
+            CMake($"--install {BuildDirectory} --prefix {InstallDirectory}");
         });
 }
