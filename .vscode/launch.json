@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "program": "${workspaceFolder}/build/bin/Debug/Build",
-            "args": [ "--target", "SetupLinuxBuild", "--architecture", "x64" ],
+            "args": [ "--architecture", "x64" ],
             "cwd": "${workspaceFolder}/build/bin/Debug",
             "stopAtEntry": false,
             "console": "integratedTerminal"

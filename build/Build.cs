@@ -1,22 +1,17 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Nuke.Common;
-using Nuke.Common.CI;
-using Nuke.Common.Execution;
 using Nuke.Common.IO;
-using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
-using Nuke.Common.Utilities.Collections;
-using static Nuke.Common.EnvironmentInfo;
-using static Nuke.Common.IO.FileSystemTasks;
-using static Nuke.Common.IO.PathConstruction;
+using Nuke.Common.Tools.GitVersion;
+using Nuke.Common.Tools.NuGet;
 using static System.Runtime.InteropServices.RuntimeInformation;
+using static Nuke.Common.IO.FileSystemTasks;
+using static Nuke.Common.Tools.NuGet.NuGetTasks;
 
 class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.InstallLinuxBuild);
+    public static int Main () => Execute<Build>(x => x.BuildRuntimePackage);
 
     readonly List<string> LinuxDependencies = new()
     {
@@ -59,6 +54,9 @@ class Build : NukeBuild
     [Parameter("Specifies the architecture for the package (e.g. x64)")]
     readonly string Architecture;
 
+    [GitVersion]
+    readonly GitVersion GitVersion;
+
     string Runtime => $"linux-{Architecture:nq}";
 
     AbsolutePath SourceRootDirectory => RootDirectory / "sources";
@@ -75,7 +73,15 @@ class Build : NukeBuild
 
     AbsolutePath InstallDirectory => InstallRootDirectory / "SDL2" / Runtime;
 
-    AbsolutePath PackageRoot => ArtifactsRootDirectory / "pkg";
+    AbsolutePath PackageRootDirectory => ArtifactsRootDirectory / "pkg";
+
+    string RuntimePackageName => $"SDL2.runtime.{Runtime}";
+
+    string RuntimePackageSpec => $"{RuntimePackageName}.nuspec";
+
+    AbsolutePath RuntimePackageTemplateDirectory => RootDirectory / "packages" / $"{RuntimePackageName}";
+
+    AbsolutePath RuntimePackageBuildDirectory => BuildRootDirectory / $"{RuntimePackageName}.nupkg";
 
     Tool Sudo => ToolResolver.GetPathTool("sudo");
 
@@ -127,5 +133,35 @@ class Build : NukeBuild
         .Executes(() =>
         {
             CMake($"--install {BuildDirectory} --prefix {InstallDirectory}");
+        });
+
+    Target BuildRuntimePackage => _ => _
+        .DependsOn(InstallLinuxBuild)
+        .Executes(() =>
+        {
+            RuntimePackageBuildDirectory.CreateOrCleanDirectory();
+
+            CopyDirectoryRecursively(RuntimePackageTemplateDirectory, RuntimePackageBuildDirectory, DirectoryExistsPolicy.Merge);
+            CopyFileToDirectory(SourceDirectory / "LICENSE.txt", RuntimePackageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README.md", RuntimePackageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README-SDL.txt", RuntimePackageBuildDirectory);
+
+            var libraryTargetDirectory = RuntimePackageBuildDirectory / "runtimes" / $"{Runtime}" / "native";
+
+            libraryTargetDirectory.CreateDirectory();
+
+            var libraryFiles = InstallDirectory.GlobFiles("lib/libSDL2*so*");
+            foreach (var libraryFile in libraryFiles)
+            {
+                CopyFileToDirectory(libraryFile, libraryTargetDirectory);
+            }
+
+            var packSettings = new NuGetPackSettings()
+                .SetProcessWorkingDirectory(RuntimePackageBuildDirectory)
+                .SetTargetPath(RuntimePackageSpec)
+                .SetOutputDirectory(PackageRootDirectory)
+                .SetVersion(GitVersion.NuGetVersion);
+
+            NuGetPack(packSettings);
         });
 }
