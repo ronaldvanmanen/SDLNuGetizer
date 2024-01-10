@@ -224,7 +224,7 @@ class Build : NukeBuild
 
             libraryTargetDirectory.CreateDirectory();
 
-            var libraryFiles = InstallDirectory.GlobFiles("lib/libSDL2*so*");
+            var libraryFiles = InstallDirectory.GlobFiles("lib/libSDL2*so*", $"lib/{Architecture}/*.dll");
             foreach (var libraryFile in libraryFiles)
             {
                 CopyFileToDirectory(libraryFile, libraryTargetDirectory);
