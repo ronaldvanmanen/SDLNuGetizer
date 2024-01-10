@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Nuke.Common;
@@ -57,7 +58,39 @@ class Build : NukeBuild
     [GitVersion]
     readonly GitVersion GitVersion;
 
-    string Runtime => $"linux-{Architecture:nq}";
+    string Runtime
+    {
+        get
+        {
+            if (IsOSPlatform(OSPlatform.Linux))
+            {
+                return $"linux-{Architecture:nq}";
+            }
+            if (IsOSPlatform(OSPlatform.Windows))
+            {
+                return $"win-{Architecture:nq}";
+            }
+            throw new NotSupportedException("Only Linux and Windows are supported at the moment.");
+        }
+    }
+
+    string PlatformFlags
+    {
+        get
+        {
+            if (IsOSPlatform(OSPlatform.Windows))
+            {
+                return Architecture switch
+                {
+                    "x64" => "-A x64",
+                    "x86" => "-A Win32",
+                    _ => string.Empty,
+                };
+            }
+            return string.Empty;
+        }
+    }
+ 
 
     AbsolutePath SourceRootDirectory => RootDirectory / "sources";
 
@@ -105,6 +138,7 @@ class Build : NukeBuild
         });
 
     Target SetupLinuxBuild => _ => _
+        .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Linux))
         .DependsOn(InstallLinuxDependencies)
         .Executes(() =>
         {
@@ -128,6 +162,38 @@ class Build : NukeBuild
             var argumentString = string.Join(' ', arguments);
             CMake(argumentString);
         });
+
+    Target SetupWindowsBuild => _ => _
+        .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Windows))
+        .Executes(() =>
+        {
+            // NOTE: Nuke uses System.Diagnostics.Process.Start to start external processes. See the documentation on
+            // https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.arguments for details
+            // on how to properly escaped arguments containing spaces.
+            var arguments = new string[]
+            {
+                $"-S", $"{SourceDirectory:dn}",
+                $"-B", $"{BuildDirectory:dn}",
+                $"-DCMAKE_INSTALL_LIBDIR=lib/{Architecture}",
+                $"-DCMAKE_INSTALL_BINDIR=lib/{Architecture}",
+                $"-DCMAKE_INSTALL_INCLUDEDIR=include",
+                $"-DSDL_VENDOR_INFO=Ronald\\x20van\\x20Manen",
+                $"-DSDL_INSTALL_TESTS=ON",
+                $"-DSDL_TESTS=ON",
+                $"-DSDL_WERROR=ON",
+                $"-DSDL_SHARED=ON",
+                $"-DSDL_STATIC=ON",
+                $"-DCMAKE_BUILD_TYPE=Release",
+                $"{PlatformFlags}"
+            };
+            var argumentString = string.Join(' ', arguments);
+            CMake(argumentString);
+        });
+
+    Target SetupBuild => _ => _
+        .DependsOn(SetupLinuxBuild)
+        .DependsOn(SetupWindowsBuild)
+        .Executes(() => {});
 
     Target LinuxBuild => _ => _
         .DependsOn(SetupLinuxBuild)

@@ -74,7 +74,9 @@
               "InstallLinuxDependencies",
               "LinuxBuild",
               "Pack",
-              "SetupLinuxBuild"
+              "SetupBuild",
+              "SetupLinuxBuild",
+              "SetupWindowsBuild"
             ]
           }
         },
@@ -90,7 +92,9 @@
               "InstallLinuxDependencies",
               "LinuxBuild",
               "Pack",
-              "SetupLinuxBuild"
+              "SetupBuild",
+              "SetupLinuxBuild",
+              "SetupWindowsBuild"
             ]
           }
         },
