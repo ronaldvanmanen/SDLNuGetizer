@@ -69,14 +69,14 @@
             "type": "string",
             "enum": [
               "BuildDevelopmentPackage",
+              "BuildProject",
               "BuildRuntimePackage",
-              "InstallLinuxBuild",
-              "InstallLinuxDependencies",
-              "LinuxBuild",
-              "Pack",
-              "SetupBuild",
-              "SetupLinuxBuild",
-              "SetupWindowsBuild"
+              "GenerateProjectBuildSystem",
+              "GenerateProjectBuildSystemOnLinux",
+              "GenerateProjectBuildSystemOnWindows",
+              "InstallProject",
+              "InstallProjectBuildDependencies",
+              "Pack"
             ]
           }
         },
@@ -87,14 +87,14 @@
             "type": "string",
             "enum": [
               "BuildDevelopmentPackage",
+              "BuildProject",
               "BuildRuntimePackage",
-              "InstallLinuxBuild",
-              "InstallLinuxDependencies",
-              "LinuxBuild",
-              "Pack",
-              "SetupBuild",
-              "SetupLinuxBuild",
-              "SetupWindowsBuild"
+              "GenerateProjectBuildSystem",
+              "GenerateProjectBuildSystemOnLinux",
+              "GenerateProjectBuildSystemOnWindows",
+              "InstallProject",
+              "InstallProjectBuildDependencies",
+              "Pack"
             ]
           }
         },

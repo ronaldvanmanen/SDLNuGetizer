@@ -128,7 +128,7 @@ class Build : NukeBuild
 
     Tool CMake => ToolResolver.GetPathTool("cmake");
 
-    Target InstallLinuxDependencies => _ => _
+    Target InstallProjectBuildDependencies => _ => _
         .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Linux))
         .Executes(() =>
         {
@@ -137,9 +137,9 @@ class Build : NukeBuild
             Sudo($"apt-get -y install {dependencies:nq}");
         });
 
-    Target SetupLinuxBuild => _ => _
+    Target GenerateProjectBuildSystemOnLinux => _ => _
         .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Linux))
-        .DependsOn(InstallLinuxDependencies)
+        .DependsOn(InstallProjectBuildDependencies)
         .Executes(() =>
         {
             // NOTE: Nuke uses System.Diagnostics.Process.Start to start external processes. See the documentation on
@@ -163,7 +163,7 @@ class Build : NukeBuild
             CMake(argumentString);
         });
 
-    Target SetupWindowsBuild => _ => _
+    Target GenerateProjectBuildSystemOnWindows => _ => _
         .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Windows))
         .Executes(() =>
         {
@@ -190,27 +190,27 @@ class Build : NukeBuild
             CMake(argumentString);
         });
 
-    Target SetupBuild => _ => _
-        .DependsOn(SetupLinuxBuild)
-        .DependsOn(SetupWindowsBuild)
+    Target GenerateProjectBuildSystem => _ => _
+        .DependsOn(GenerateProjectBuildSystemOnLinux)
+        .DependsOn(GenerateProjectBuildSystemOnWindows)
         .Executes(() => {});
 
-    Target LinuxBuild => _ => _
-        .DependsOn(SetupLinuxBuild)
+    Target BuildProject => _ => _
+        .DependsOn(GenerateProjectBuildSystem)
         .Executes(() =>
         {
             CMake($"--build {BuildDirectory} --config Release --parallel");
         });
 
-    Target InstallLinuxBuild => _ => _
-        .DependsOn(LinuxBuild)
+    Target InstallProject => _ => _
+        .DependsOn(BuildProject)
         .Executes(() =>
         {
             CMake($"--install {BuildDirectory} --prefix {InstallDirectory}");
         });
 
     Target BuildRuntimePackage => _ => _
-        .DependsOn(InstallLinuxBuild)
+        .DependsOn(InstallProject)
         .Executes(() =>
         {
             RuntimePackageBuildDirectory.CreateOrCleanDirectory();
@@ -240,7 +240,7 @@ class Build : NukeBuild
         });
 
     Target BuildDevelopmentPackage => _ => _
-        .DependsOn(InstallLinuxBuild)
+        .DependsOn(InstallProject)
         .Executes(() =>
         {
             DevelopmentPackageBuildDirectory.CreateOrCleanDirectory();
