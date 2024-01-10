@@ -247,6 +247,12 @@ class Build : NukeBuild
 
             CopyDirectoryRecursively(DevelopmentPackageTemplateDirectory, DevelopmentPackageBuildDirectory, DirectoryExistsPolicy.Merge);
             CopyDirectoryRecursively(InstallDirectory, DevelopmentPackageBuildDirectory, DirectoryExistsPolicy.Merge);
+            CopyFileToDirectory(SourceDirectory / "BUGS.txt", DevelopmentPackageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "LICENSE.txt", DevelopmentPackageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README-SDL.txt", DevelopmentPackageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README.md", DevelopmentPackageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "WhatsNew.txt", DevelopmentPackageBuildDirectory);
+            CopyDirectoryRecursively(SourceDirectory / "docs", DevelopmentPackageBuildDirectory / "docs", DirectoryExistsPolicy.Merge);
 
             var packSettings = new NuGetPackSettings()
                 .SetProcessWorkingDirectory(DevelopmentPackageBuildDirectory)
