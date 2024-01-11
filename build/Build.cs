@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Nuke.Common;
+using Nuke.Common.Git;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.GitVersion;
@@ -13,9 +14,11 @@ using static Nuke.Common.Tools.NuGet.NuGetTasks;
 
 class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.PackProject);
+    const string ProjectName = "SDL2";
 
-    readonly List<string> LinuxDependencies = new()
+    public static int Main () => Execute<Build>(x => x.BuildPackages);
+
+    readonly List<string> ProjectBuildDependenciesForLinux = new()
     {
         "build-essential",
         "git",
@@ -74,23 +77,6 @@ class Build : NukeBuild
         }
     }
 
-    string PlatformFlags
-    {
-        get
-        {
-            if (IsOSPlatform(OSPlatform.Windows))
-            {
-                return Architecture switch
-                {
-                    "x64" => "-A x64",
-                    "x86" => "-A Win32",
-                    _ => string.Empty,
-                };
-            }
-            return string.Empty;
-        }
-    }
-
     AbsolutePath SourceRootDirectory => RootDirectory / "sources";
 
     AbsolutePath SourceDirectory => SourceRootDirectory / "SDL";
@@ -99,37 +85,13 @@ class Build : NukeBuild
 
     AbsolutePath BuildRootDirectory => ArtifactsRootDirectory / "build";
     
-    AbsolutePath BuildDirectory => BuildRootDirectory / "SDL2" / Runtime;
+    AbsolutePath BuildDirectory => BuildRootDirectory / $"{ProjectName}" / Runtime;
 
     AbsolutePath InstallRootDirectory => ArtifactsRootDirectory / "install";
 
-    AbsolutePath InstallDirectory => InstallRootDirectory / "SDL2" / Runtime;
+    AbsolutePath InstallDirectory => InstallRootDirectory / $"{ProjectName}" / Runtime;
 
     AbsolutePath PackageRootDirectory => ArtifactsRootDirectory / "pkg";
-
-    string RuntimePackageName => $"SDL2.runtime.{Runtime}";
-
-    string RuntimePackageSpec => $"{RuntimePackageName}.nuspec";
-
-    AbsolutePath RuntimePackageTemplateDirectory => RootDirectory / "packages" / $"{RuntimePackageName}";
-
-    AbsolutePath RuntimePackageBuildDirectory => BuildRootDirectory / $"{RuntimePackageName}.nupkg";
-
-    string DevelopmentPackageName => $"SDL2.devel.{Runtime}";
-
-    string DevelopmentPackageSpec => $"{DevelopmentPackageName}.nuspec";
-
-    AbsolutePath DevelopmentPackageTemplateDirectory => RootDirectory / "packages" / $"{DevelopmentPackageName}";
-
-    AbsolutePath DevelopmentPackageBuildDirectory => BuildRootDirectory / $"{DevelopmentPackageName}.nupkg";
-
-    string MultiplatformPackageName => $"SDL2";
-
-    string MultiplatformPackageSpec => $"{MultiplatformPackageName}.nuspec";
-
-    AbsolutePath MultiplatformPackageTemplateDirectory => RootDirectory / "packages" / $"{MultiplatformPackageName}";
-
-    AbsolutePath MultiplatformPackageBuildDirectory => BuildRootDirectory / $"{MultiplatformPackageName}.nupkg";
 
     Tool Sudo => ToolResolver.GetPathTool("sudo");
 
@@ -139,73 +101,68 @@ class Build : NukeBuild
 
     Target InstallProjectBuildDependencies => _ => _
         .Unlisted()
-        .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Linux))
         .Executes(() =>
         {
-            Sudo($"apt-get update");
-            var dependencies = string.Join(' ', LinuxDependencies);
-            Sudo($"apt-get -y install {dependencies:nq}");
+            if (IsOSPlatform(OSPlatform.Linux))
+            {
+                Sudo($"apt-get update");
+                var dependencies = string.Join(' ', ProjectBuildDependenciesForLinux);
+                Sudo($"apt-get -y install {dependencies:nq}");
+            }
         });
 
-    Target GenerateProjectBuildSystemOnLinux => _ => _
-        .Unlisted()
-        .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Linux))
+    Target GenerateProjectBuildSystem => _ => _
         .DependsOn(InstallProjectBuildDependencies)
         .Executes(() =>
         {
             // NOTE: Nuke uses System.Diagnostics.Process.Start to start external processes. See the documentation on
             // https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.arguments for details
             // on how to properly escaped arguments containing spaces.
-            var arguments = new string[]
-            {
-                $"-S", $"{SourceDirectory:dn}",
-                $"-B", $"{BuildDirectory:dn}",
-                $"-G", $"Ninja",
-                $"-DSDL_VENDOR_INFO=Ronald\\x20van\\x20Manen",
-                $"-DSDL2_DISABLE_SDL2MAIN=ON",
-                $"-DSDL_INSTALL_TESTS=ON",
-                $"-DSDL_TESTS=ON",
-                $"-DSDL_WERROR=ON",
-                $"-DSDL_SHARED=ON",
-                $"-DSDL_STATIC=ON",
-                $"-DCMAKE_BUILD_TYPE=Release"
-            };
-            var argumentString = string.Join(' ', arguments);
-            CMake(argumentString);
-        });
+            var arguments = new List<string>();
 
-    Target GenerateProjectBuildSystemOnWindows => _ => _
-        .Unlisted()
-        .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Windows))
-        .Executes(() =>
-        {
-            // NOTE: Nuke uses System.Diagnostics.Process.Start to start external processes. See the documentation on
-            // https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.arguments for details
-            // on how to properly escaped arguments containing spaces.
-            var arguments = new string[]
+            if (IsOSPlatform(OSPlatform.Windows))
             {
-                $"-S", $"{SourceDirectory:dn}",
-                $"-B", $"{BuildDirectory:dn}",
-                $"-DCMAKE_INSTALL_LIBDIR=lib/{Architecture}",
-                $"-DCMAKE_INSTALL_BINDIR=lib/{Architecture}",
-                $"-DCMAKE_INSTALL_INCLUDEDIR=include",
-                $"-DSDL_VENDOR_INFO=Ronald\\x20van\\x20Manen",
-                $"-DSDL_INSTALL_TESTS=ON",
-                $"-DSDL_TESTS=ON",
-                $"-DSDL_WERROR=ON",
-                $"-DSDL_SHARED=ON",
-                $"-DSDL_STATIC=ON",
-                $"-DCMAKE_BUILD_TYPE=Release",
-                $"{PlatformFlags}"
-            };
-            var argumentString = string.Join(' ', arguments);
-            CMake(argumentString);
-        });
+                arguments.Add($"-DCMAKE_INSTALL_LIBDIR=lib/{Architecture}");
+                arguments.Add($"-DCMAKE_INSTALL_BINDIR=lib/{Architecture}");
+                arguments.Add($"-DCMAKE_INSTALL_INCLUDEDIR=include");
+            }
 
-    Target GenerateProjectBuildSystem => _ => _
-        .DependsOn(GenerateProjectBuildSystemOnLinux)
-        .DependsOn(GenerateProjectBuildSystemOnWindows)
-        .Executes(() => {});
+            if (IsOSPlatform(OSPlatform.Linux))
+            {
+                arguments.Add($"-DSDL2_DISABLE_SDL2MAIN=OFF");
+            }
+
+            arguments.Add($"-DSDL_VENDOR_INFO=Ronald\\x20van\\x20Manen");
+            arguments.Add($"-DSDL_INSTALL_TESTS=ON");
+            arguments.Add($"-DSDL_TESTS=ON");
+            arguments.Add($"-DSDL_WERROR=ON");
+            arguments.Add($"-DSDL_SHARED=ON");
+            arguments.Add($"-DSDL_STATIC=ON");
+            arguments.Add($"-DCMAKE_BUILD_TYPE=Release");
+
+            if (IsOSPlatform(OSPlatform.Linux))
+            {
+                arguments.Add($"-G Ninja");
+            }
+
+            if (IsOSPlatform(OSPlatform.Windows))
+            {
+                switch (Architecture)
+                {
+                    case "x64":
+                        arguments.Add("-A x64");
+                        break;
+                    case "x86":
+                        arguments.Add("-A Win32");
+                        break;
+                }
+            }
+
+            arguments.Add($"-S {SourceDirectory:dn}");
+            arguments.Add($"-B {BuildDirectory:dn}");
+
+            CMake(string.Join(' ', arguments));
+        });
 
     Target BuildProject => _ => _
         .DependsOn(GenerateProjectBuildSystem)
@@ -234,16 +191,19 @@ class Build : NukeBuild
         .DependsOn(InstallProject)
         .Executes(() =>
         {
-            RuntimePackageBuildDirectory.CreateOrCleanDirectory();
+            var packageName = $"{ProjectName}.runtime.{Runtime}";
+            var packageSpec = $"{packageName}.nuspec";
+            var packageTemplateDirectory = RootDirectory / "packages" / $"{packageName}";
+            var packageBuildDirectory = BuildRootDirectory / $"{packageName}.nupkg";
 
-            CopyDirectoryRecursively(RuntimePackageTemplateDirectory, RuntimePackageBuildDirectory, DirectoryExistsPolicy.Merge);
-            CopyFileToDirectory(SourceDirectory / "LICENSE.txt", RuntimePackageBuildDirectory);
-            CopyFileToDirectory(SourceDirectory / "README.md", RuntimePackageBuildDirectory);
-            CopyFileToDirectory(SourceDirectory / "README-SDL.txt", RuntimePackageBuildDirectory);
+            packageBuildDirectory.CreateOrCleanDirectory();
 
-            var libraryTargetDirectory = RuntimePackageBuildDirectory / "runtimes" / $"{Runtime}" / "native";
+            CopyDirectoryRecursively(packageTemplateDirectory, packageBuildDirectory, DirectoryExistsPolicy.Merge);
+            CopyFileToDirectory(SourceDirectory / "LICENSE.txt", packageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README.md", packageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README-SDL.txt", packageBuildDirectory);
 
-            libraryTargetDirectory.CreateDirectory();
+            var libraryTargetDirectory = packageBuildDirectory / "runtimes" / $"{Runtime}" / "native";
 
             var libraryFiles = InstallDirectory.GlobFiles("lib/libSDL2*so*", $"lib/{Architecture}/*.dll");
             foreach (var libraryFile in libraryFiles)
@@ -252,8 +212,8 @@ class Build : NukeBuild
             }
 
             var packSettings = new NuGetPackSettings()
-                .SetProcessWorkingDirectory(RuntimePackageBuildDirectory)
-                .SetTargetPath(RuntimePackageSpec)
+                .SetProcessWorkingDirectory(packageBuildDirectory)
+                .SetTargetPath(packageSpec)
                 .SetOutputDirectory(PackageRootDirectory)
                 .SetVersion(GitVersion.NuGetVersion);
 
@@ -265,20 +225,25 @@ class Build : NukeBuild
         .DependsOn(InstallProject)
         .Executes(() =>
         {
-            DevelopmentPackageBuildDirectory.CreateOrCleanDirectory();
+            var packageName = $"{ProjectName}.devel.{Runtime}";
+            var packageSpec = $"{packageName}.nuspec";
+            var packageTemplateDirectory = RootDirectory / "packages" / $"{packageName}";
+            var packageBuildDirectory = BuildRootDirectory / $"{packageName}.nupkg";
 
-            CopyDirectoryRecursively(DevelopmentPackageTemplateDirectory, DevelopmentPackageBuildDirectory, DirectoryExistsPolicy.Merge);
-            CopyDirectoryRecursively(InstallDirectory, DevelopmentPackageBuildDirectory, DirectoryExistsPolicy.Merge);
-            CopyFileToDirectory(SourceDirectory / "BUGS.txt", DevelopmentPackageBuildDirectory);
-            CopyFileToDirectory(SourceDirectory / "LICENSE.txt", DevelopmentPackageBuildDirectory);
-            CopyFileToDirectory(SourceDirectory / "README-SDL.txt", DevelopmentPackageBuildDirectory);
-            CopyFileToDirectory(SourceDirectory / "README.md", DevelopmentPackageBuildDirectory);
-            CopyFileToDirectory(SourceDirectory / "WhatsNew.txt", DevelopmentPackageBuildDirectory);
-            CopyDirectoryRecursively(SourceDirectory / "docs", DevelopmentPackageBuildDirectory / "docs", DirectoryExistsPolicy.Merge);
+            packageBuildDirectory.CreateOrCleanDirectory();
+
+            CopyDirectoryRecursively(packageTemplateDirectory, packageBuildDirectory, DirectoryExistsPolicy.Merge);
+            CopyDirectoryRecursively(InstallDirectory, packageBuildDirectory, DirectoryExistsPolicy.Merge);
+            CopyFileToDirectory(SourceDirectory / "BUGS.txt", packageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "LICENSE.txt", packageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README-SDL.txt", packageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README.md", packageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "WhatsNew.txt", packageBuildDirectory);
+            CopyDirectoryRecursively(SourceDirectory / "docs", packageBuildDirectory / "docs", DirectoryExistsPolicy.Merge);
 
             var packSettings = new NuGetPackSettings()
-                .SetProcessWorkingDirectory(DevelopmentPackageBuildDirectory)
-                .SetTargetPath(DevelopmentPackageSpec)
+                .SetProcessWorkingDirectory(packageBuildDirectory)
+                .SetTargetPath(packageSpec)
                 .SetOutputDirectory(PackageRootDirectory)
                 .SetVersion(GitVersion.NuGetVersion)
                 .SetNoPackageAnalysis(true);
@@ -288,28 +253,32 @@ class Build : NukeBuild
 
     Target BuildMultiplatformPackage => _ => _
         .Unlisted()
-        .DependsOn(InstallProject)
         .Executes(() =>
         {
-            MultiplatformPackageBuildDirectory.CreateOrCleanDirectory();
+            var packageName = $"{ProjectName}";
+            var packageSpec = $"{packageName}.nuspec";
+            var packageTemplateDirectory = RootDirectory / "packages" / $"{packageName}";
+            var packageBuildDirectory = BuildRootDirectory / $"{packageName}.nupkg";
 
-            CopyDirectoryRecursively(MultiplatformPackageTemplateDirectory, MultiplatformPackageBuildDirectory, DirectoryExistsPolicy.Merge);
-            CopyFileToDirectory(SourceDirectory / "BUGS.txt", MultiplatformPackageBuildDirectory);
-            CopyFileToDirectory(SourceDirectory / "LICENSE.txt", MultiplatformPackageBuildDirectory);
-            CopyFileToDirectory(SourceDirectory / "README-SDL.txt", MultiplatformPackageBuildDirectory);
-            CopyFileToDirectory(SourceDirectory / "README.md", MultiplatformPackageBuildDirectory);
-            CopyFileToDirectory(SourceDirectory / "WhatsNew.txt", MultiplatformPackageBuildDirectory);
-            CopyDirectoryRecursively(SourceDirectory / "docs", MultiplatformPackageBuildDirectory / "docs", DirectoryExistsPolicy.Merge);
-            CopyDirectoryRecursively(SourceDirectory / "include", MultiplatformPackageBuildDirectory / "lib" / "native" / "include", DirectoryExistsPolicy.Merge);
+            packageBuildDirectory.CreateOrCleanDirectory();
 
-            var runtime = MultiplatformPackageBuildDirectory / "runtime.json";
+            CopyDirectoryRecursively(packageTemplateDirectory, packageBuildDirectory, DirectoryExistsPolicy.Merge);
+            CopyFileToDirectory(SourceDirectory / "BUGS.txt", packageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "LICENSE.txt", packageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README-SDL.txt", packageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README.md", packageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "WhatsNew.txt", packageBuildDirectory);
+            CopyDirectoryRecursively(SourceDirectory / "docs", packageBuildDirectory / "docs", DirectoryExistsPolicy.Merge);
+            CopyDirectoryRecursively(SourceDirectory / "include", packageBuildDirectory / "lib" / "native" / "include", DirectoryExistsPolicy.Merge);
+
+            var runtime = packageBuildDirectory / "runtime.json";
             var runtimeContent = runtime.ReadAllText();
             Regex.Replace(runtimeContent, "$version$", GitVersion.NuGetVersion);
             runtime.WriteAllText(runtimeContent);
 
             var packSettings = new NuGetPackSettings()
-                .SetProcessWorkingDirectory(MultiplatformPackageBuildDirectory)
-                .SetTargetPath(MultiplatformPackageSpec)
+                .SetProcessWorkingDirectory(packageBuildDirectory)
+                .SetTargetPath(packageSpec)
                 .SetOutputDirectory(PackageRootDirectory)
                 .SetVersion(GitVersion.NuGetVersion)
                 .SetNoPackageAnalysis(true);
@@ -317,9 +286,8 @@ class Build : NukeBuild
             NuGetPack(packSettings);
         });
 
-    Target PackProject => _ => _
+    Target BuildPackages => _ => _
         .DependsOn(BuildRuntimePackage)
         .DependsOn(BuildDevelopmentPackage)
-        .DependsOn(BuildMultiplatformPackage)
-        .Executes(() => {});
+        .DependsOn(BuildMultiplatformPackage);
 }

@@ -70,14 +70,12 @@
             "enum": [
               "BuildDevelopmentPackage",
               "BuildMultiplatformPackage",
+              "BuildPackages",
               "BuildProject",
               "BuildRuntimePackage",
               "GenerateProjectBuildSystem",
-              "GenerateProjectBuildSystemOnLinux",
-              "GenerateProjectBuildSystemOnWindows",
               "InstallProject",
               "InstallProjectBuildDependencies",
-              "PackProject",
               "TestProject"
             ]
           }
@@ -90,14 +88,12 @@
             "enum": [
               "BuildDevelopmentPackage",
               "BuildMultiplatformPackage",
+              "BuildPackages",
               "BuildProject",
               "BuildRuntimePackage",
               "GenerateProjectBuildSystem",
-              "GenerateProjectBuildSystemOnLinux",
-              "GenerateProjectBuildSystemOnWindows",
               "InstallProject",
               "InstallProjectBuildDependencies",
-              "PackProject",
               "TestProject"
             ]
           }
