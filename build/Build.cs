@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
@@ -12,7 +13,7 @@ using static Nuke.Common.Tools.NuGet.NuGetTasks;
 
 class Build : NukeBuild
 {
-    public static int Main () => Execute<Build>(x => x.Pack);
+    public static int Main () => Execute<Build>(x => x.PackProject);
 
     readonly List<string> LinuxDependencies = new()
     {
@@ -50,7 +51,6 @@ class Build : NukeBuild
         "libdecor-0-dev",
         "mono-devel"
     };
-
 
     [Parameter("Specifies the architecture for the package (e.g. x64)")]
     readonly string Architecture;
@@ -90,7 +90,6 @@ class Build : NukeBuild
             return string.Empty;
         }
     }
- 
 
     AbsolutePath SourceRootDirectory => RootDirectory / "sources";
 
@@ -123,6 +122,14 @@ class Build : NukeBuild
     AbsolutePath DevelopmentPackageTemplateDirectory => RootDirectory / "packages" / $"{DevelopmentPackageName}";
 
     AbsolutePath DevelopmentPackageBuildDirectory => BuildRootDirectory / $"{DevelopmentPackageName}.nupkg";
+
+    string MultiplatformPackageName => $"SDL2";
+
+    string MultiplatformPackageSpec => $"{MultiplatformPackageName}.nuspec";
+
+    AbsolutePath MultiplatformPackageTemplateDirectory => RootDirectory / "packages" / $"{MultiplatformPackageName}";
+
+    AbsolutePath MultiplatformPackageBuildDirectory => BuildRootDirectory / $"{MultiplatformPackageName}.nupkg";
 
     Tool Sudo => ToolResolver.GetPathTool("sudo");
 
@@ -274,8 +281,39 @@ class Build : NukeBuild
             NuGetPack(packSettings);
         });
 
-    Target Pack => _ => _
+    Target BuildMultiplatformPackage => _ => _
+        .DependsOn(InstallProject)
+        .Executes(() =>
+        {
+            MultiplatformPackageBuildDirectory.CreateOrCleanDirectory();
+
+            CopyDirectoryRecursively(MultiplatformPackageTemplateDirectory, MultiplatformPackageBuildDirectory, DirectoryExistsPolicy.Merge);
+            CopyFileToDirectory(SourceDirectory / "BUGS.txt", MultiplatformPackageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "LICENSE.txt", MultiplatformPackageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README-SDL.txt", MultiplatformPackageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "README.md", MultiplatformPackageBuildDirectory);
+            CopyFileToDirectory(SourceDirectory / "WhatsNew.txt", MultiplatformPackageBuildDirectory);
+            CopyDirectoryRecursively(SourceDirectory / "docs", MultiplatformPackageBuildDirectory / "docs", DirectoryExistsPolicy.Merge);
+            CopyDirectoryRecursively(SourceDirectory / "include", MultiplatformPackageBuildDirectory / "lib" / "native" / "include", DirectoryExistsPolicy.Merge);
+
+            var runtime = MultiplatformPackageBuildDirectory / "runtime.json";
+            var runtimeContent = runtime.ReadAllText();
+            Regex.Replace(runtimeContent, "$version$", GitVersion.NuGetVersion);
+            runtime.WriteAllText(runtimeContent);
+
+            var packSettings = new NuGetPackSettings()
+                .SetProcessWorkingDirectory(MultiplatformPackageBuildDirectory)
+                .SetTargetPath(MultiplatformPackageSpec)
+                .SetOutputDirectory(PackageRootDirectory)
+                .SetVersion(GitVersion.NuGetVersion)
+                .SetNoPackageAnalysis(true);
+
+            NuGetPack(packSettings);
+        });
+
+    Target PackProject => _ => _
         .DependsOn(BuildRuntimePackage)
         .DependsOn(BuildDevelopmentPackage)
+        .DependsOn(BuildMultiplatformPackage)
         .Executes(() => {});
 }

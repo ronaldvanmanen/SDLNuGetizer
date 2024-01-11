@@ -69,6 +69,7 @@
             "type": "string",
             "enum": [
               "BuildDevelopmentPackage",
+              "BuildMultiplatformPackage",
               "BuildProject",
               "BuildRuntimePackage",
               "GenerateProjectBuildSystem",
@@ -76,7 +77,7 @@
               "GenerateProjectBuildSystemOnWindows",
               "InstallProject",
               "InstallProjectBuildDependencies",
-              "Pack",
+              "PackProject",
               "TestProject"
             ]
           }
@@ -88,6 +89,7 @@
             "type": "string",
             "enum": [
               "BuildDevelopmentPackage",
+              "BuildMultiplatformPackage",
               "BuildProject",
               "BuildRuntimePackage",
               "GenerateProjectBuildSystem",
@@ -95,7 +97,7 @@
               "GenerateProjectBuildSystemOnWindows",
               "InstallProject",
               "InstallProjectBuildDependencies",
-              "Pack",
+              "PackProject",
               "TestProject"
             ]
           }
