@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Nuke.Common;
-using Nuke.Common.Git;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Tools.NuGet;
+using Nuke.Common.Utilities;
 using static System.Runtime.InteropServices.RuntimeInformation;
 using static Nuke.Common.IO.FileSystemTasks;
 using static Nuke.Common.Tools.NuGet.NuGetTasks;
@@ -15,6 +16,14 @@ using static Nuke.Common.Tools.NuGet.NuGetTasks;
 class Build : NukeBuild
 {
     const string ProjectName = "SDL2";
+
+    const string ProjectAuthor = "Ronald van Manen";
+
+    const string ProjectOwner = "Ronald van Manen";
+
+    const string ProjectUrl = "https://github.com/ronaldvanmanen/SDL2-packaging";
+
+    const string RepositoryUrl = "https://github.com/ronaldvanmanen/SDL2-packaging";
 
     public static int Main () => Execute<Build>(x => x.BuildPackages);
 
@@ -225,14 +234,41 @@ class Build : NukeBuild
         .DependsOn(InstallProject)
         .Executes(() =>
         {
-            var packageName = $"{ProjectName}.devel.{Runtime}";
-            var packageSpec = $"{packageName}.nuspec";
-            var packageTemplateDirectory = RootDirectory / "packages" / $"{packageName}";
-            var packageBuildDirectory = BuildRootDirectory / $"{packageName}.nupkg";
-
+            var packageID = $"{ProjectName}.devel.{Runtime}";
+            var packageBuildDirectory = BuildRootDirectory / $"{packageID}.nupkg";
+            var packageSpecFile = packageBuildDirectory / $"{packageID}.nuspec";
+            
             packageBuildDirectory.CreateOrCleanDirectory();
 
-            CopyDirectoryRecursively(packageTemplateDirectory, packageBuildDirectory, DirectoryExistsPolicy.Merge);
+            packageSpecFile.WriteXml(
+                new XDocument(
+                    new XDeclaration("1.0", "utf-8", null),
+                    new XElement("{http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd}package",
+                        new XElement("metadata",
+                            new XAttribute("minClientVersion", 2.12),
+                            new XElement("id", packageID),
+                            new XElement("version", GitVersion.NuGetVersion),
+                            new XElement("authors", ProjectAuthor),
+                            new XElement("owners", ProjectOwner),
+                            new XElement("requireLicenseAcceptance", true),
+                            new XElement("license", new XAttribute("type", "expression"), "ZLib"),
+                            new XElement("projectUrl", ProjectUrl),
+                            new XElement("description", $"{Runtime} native package for {ProjectName} development."),
+                            new XElement("copyright", $"Copyright © {ProjectOwner}"),
+                            new XElement("repository",
+                                new XAttribute("type", "git"),
+                                new XAttribute("url", RepositoryUrl)
+                            ),
+                            new XElement("dependencies",
+                                new XElement("group",
+                                    new XAttribute("targetFramework", "native0.0")
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+
             CopyDirectoryRecursively(InstallDirectory, packageBuildDirectory, DirectoryExistsPolicy.Merge);
             CopyFileToDirectory(SourceDirectory / "BUGS.txt", packageBuildDirectory);
             CopyFileToDirectory(SourceDirectory / "LICENSE.txt", packageBuildDirectory);
@@ -243,9 +279,8 @@ class Build : NukeBuild
 
             var packSettings = new NuGetPackSettings()
                 .SetProcessWorkingDirectory(packageBuildDirectory)
-                .SetTargetPath(packageSpec)
+                .SetTargetPath(packageSpecFile)
                 .SetOutputDirectory(PackageRootDirectory)
-                .SetVersion(GitVersion.NuGetVersion)
                 .SetNoPackageAnalysis(true);
 
             NuGetPack(packSettings);
