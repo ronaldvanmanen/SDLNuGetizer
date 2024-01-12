@@ -200,14 +200,36 @@ class Build : NukeBuild
         .DependsOn(InstallProject)
         .Executes(() =>
         {
-            var packageName = $"{ProjectName}.runtime.{Runtime}";
-            var packageSpec = $"{packageName}.nuspec";
-            var packageTemplateDirectory = RootDirectory / "packages" / $"{packageName}";
-            var packageBuildDirectory = BuildRootDirectory / $"{packageName}.nupkg";
+            var packageID = $"{ProjectName}.runtime.{Runtime}";
+            var packageBuildDirectory = BuildRootDirectory / $"{packageID}.nupkg";
+            var packageSpecFile = packageBuildDirectory / $"{packageID}.nuspec";
 
             packageBuildDirectory.CreateOrCleanDirectory();
 
-            CopyDirectoryRecursively(packageTemplateDirectory, packageBuildDirectory, DirectoryExistsPolicy.Merge);
+            packageSpecFile.WriteXml(
+                new XDocument(
+                    new XDeclaration("1.0", "utf-8", null),
+                    new XElement("{http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd}package",
+                        new XElement("metadata",
+                            new XAttribute("minClientVersion", 2.12),
+                            new XElement("id", packageID),
+                            new XElement("version", GitVersion.NuGetVersion),
+                            new XElement("authors", ProjectAuthor),
+                            new XElement("owners", ProjectOwner),
+                            new XElement("requireLicenseAcceptance", true),
+                            new XElement("license", new XAttribute("type", "expression"), "ZLib"),
+                            new XElement("projectUrl", ProjectUrl),
+                            new XElement("description", $"{Runtime} runtime library for {ProjectName}."),
+                            new XElement("copyright", $"Copyright © {ProjectOwner}"),
+                            new XElement("repository",
+                                new XAttribute("type", "git"),
+                                new XAttribute("url", RepositoryUrl)
+                            )
+                        )
+                    )
+                )
+            );
+
             CopyFileToDirectory(SourceDirectory / "LICENSE.txt", packageBuildDirectory);
             CopyFileToDirectory(SourceDirectory / "README.md", packageBuildDirectory);
             CopyFileToDirectory(SourceDirectory / "README-SDL.txt", packageBuildDirectory);
@@ -222,9 +244,8 @@ class Build : NukeBuild
 
             var packSettings = new NuGetPackSettings()
                 .SetProcessWorkingDirectory(packageBuildDirectory)
-                .SetTargetPath(packageSpec)
-                .SetOutputDirectory(PackageRootDirectory)
-                .SetVersion(GitVersion.NuGetVersion);
+                .SetTargetPath(packageSpecFile)
+                .SetOutputDirectory(PackageRootDirectory);
 
             NuGetPack(packSettings);
         });
