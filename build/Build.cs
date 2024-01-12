@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using NuGet.Packaging;
+using NuGet.RuntimeModel;
+using NuGet.Versioning;
 using Nuke.Common;
 using Nuke.Common.IO;
 using Nuke.Common.Tooling;
@@ -309,16 +313,86 @@ class Build : NukeBuild
 
     Target BuildMultiplatformPackage => _ => _
         .Unlisted()
+        .DependsOn(BuildRuntimePackage)
         .Executes(() =>
         {
-            var packageName = $"{ProjectName}";
-            var packageSpec = $"{packageName}.nuspec";
-            var packageTemplateDirectory = RootDirectory / "packages" / $"{packageName}";
-            var packageBuildDirectory = BuildRootDirectory / $"{packageName}.nupkg";
+            var packageID = $"{ProjectName}";
+            var packageBuildDirectory = BuildRootDirectory / $"{packageID}.nupkg";
+            var packageSpecFile = packageBuildDirectory / $"{packageID}.nuspec";
+            var packageVersion = GitVersion.NuGetVersion;
+
+            var runtimeSpec = packageBuildDirectory / "runtime.json";
+            var runtimePackageVersion = VersionRange.Parse(packageVersion);
+            var placeholderFiles = new []
+            {
+                packageBuildDirectory / "lib" / "netstandard2.0" / "_._"
+            };
 
             packageBuildDirectory.CreateOrCleanDirectory();
 
-            CopyDirectoryRecursively(packageTemplateDirectory, packageBuildDirectory, DirectoryExistsPolicy.Merge);
+            packageSpecFile.WriteXml(
+                new XDocument(
+                    new XDeclaration("1.0", "utf-8", null),
+                    new XElement("{http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd}package",
+                        new XElement("metadata",
+                            new XAttribute("minClientVersion", 2.12),
+                            new XElement("id", packageID),
+                            new XElement("version", packageVersion),
+                            new XElement("authors", ProjectAuthor),
+                            new XElement("owners", ProjectOwner),
+                            new XElement("requireLicenseAcceptance", true),
+                            new XElement("license", new XAttribute("type", "expression"), "ZLib"),
+                            new XElement("projectUrl", ProjectUrl),
+                            new XElement("description", $"Multi-platform native runtime library for {ProjectName}."),
+                            new XElement("copyright", $"Copyright © {ProjectOwner}"),
+                            new XElement("repository",
+                                new XAttribute("type", "git"),
+                                new XAttribute("url", RepositoryUrl)
+                            ),
+                            new XElement("dependencies",
+                                new XElement("group",
+                                    new XAttribute("targetFramework", ".NETStandard2.0")
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+            
+            runtimeSpec.WriteRuntimeGraph(
+                new RuntimeGraph(
+                    new []
+                    {
+                        new RuntimeDescription("linux-x64", new []
+                        {
+                            new RuntimeDependencySet("SDL2", new []
+                            {
+                                new RuntimePackageDependency("SDL2.runtime.linux-x64", runtimePackageVersion)
+                            })
+                        }),
+                        new RuntimeDescription("win-x64", new []
+                        {
+                            new RuntimeDependencySet("SDL2", new []
+                            {
+                                new RuntimePackageDependency("SDL2.runtime.win-x64", runtimePackageVersion)
+                            })
+                        }),
+                        new RuntimeDescription("win-x86", new []
+                        {
+                            new RuntimeDependencySet("SDL2", new []
+                            {
+                                new RuntimePackageDependency("SDL2.runtime.win-x86", runtimePackageVersion)
+                            })
+                        }),
+                    }
+                )
+            );
+
+            foreach (var placeholder in placeholderFiles)
+            {
+                placeholder.TouchFile();
+            }
+
             CopyFileToDirectory(SourceDirectory / "BUGS.txt", packageBuildDirectory);
             CopyFileToDirectory(SourceDirectory / "LICENSE.txt", packageBuildDirectory);
             CopyFileToDirectory(SourceDirectory / "README-SDL.txt", packageBuildDirectory);
@@ -327,16 +401,10 @@ class Build : NukeBuild
             CopyDirectoryRecursively(SourceDirectory / "docs", packageBuildDirectory / "docs", DirectoryExistsPolicy.Merge);
             CopyDirectoryRecursively(SourceDirectory / "include", packageBuildDirectory / "lib" / "native" / "include", DirectoryExistsPolicy.Merge);
 
-            var runtime = packageBuildDirectory / "runtime.json";
-            var runtimeContent = runtime.ReadAllText();
-            Regex.Replace(runtimeContent, "$version$", GitVersion.NuGetVersion);
-            runtime.WriteAllText(runtimeContent);
-
             var packSettings = new NuGetPackSettings()
                 .SetProcessWorkingDirectory(packageBuildDirectory)
-                .SetTargetPath(packageSpec)
+                .SetTargetPath(packageSpecFile)
                 .SetOutputDirectory(PackageRootDirectory)
-                .SetVersion(GitVersion.NuGetVersion)
                 .SetNoPackageAnalysis(true);
 
             NuGetPack(packSettings);
