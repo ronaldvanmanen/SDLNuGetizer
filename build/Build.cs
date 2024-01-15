@@ -22,8 +22,6 @@ class Build : NukeBuild
 
     const string ProjectAuthor = "Ronald van Manen";
 
-    const string ProjectOwner = "Ronald van Manen";
-
     const string ProjectUrl = "https://github.com/ronaldvanmanen/SDL2-packaging";
 
     const string RepositoryUrl = "https://github.com/ronaldvanmanen/SDL2-packaging";
@@ -223,12 +221,11 @@ class Build : NukeBuild
                             new XElement("id", packageID),
                             new XElement("version", GitVersion.NuGetVersion),
                             new XElement("authors", ProjectAuthor),
-                            new XElement("owners", ProjectOwner),
                             new XElement("requireLicenseAcceptance", true),
                             new XElement("license", new XAttribute("type", "expression"), "ZLib"),
                             new XElement("projectUrl", ProjectUrl),
                             new XElement("description", $"{Runtime} runtime library for {ProjectName}."),
-                            new XElement("copyright", $"Copyright © {ProjectOwner}"),
+                            new XElement("copyright", $"Copyright © {ProjectAuthor}"),
                             new XElement("repository",
                                 new XAttribute("type", "git"),
                                 new XAttribute("url", RepositoryUrl)
@@ -279,12 +276,11 @@ class Build : NukeBuild
                             new XElement("id", packageID),
                             new XElement("version", GitVersion.NuGetVersion),
                             new XElement("authors", ProjectAuthor),
-                            new XElement("owners", ProjectOwner),
                             new XElement("requireLicenseAcceptance", true),
                             new XElement("license", new XAttribute("type", "expression"), "ZLib"),
                             new XElement("projectUrl", ProjectUrl),
                             new XElement("description", $"{Runtime} native package for {ProjectName} development."),
-                            new XElement("copyright", $"Copyright © {ProjectOwner}"),
+                            new XElement("copyright", $"Copyright © {ProjectAuthor}"),
                             new XElement("repository",
                                 new XAttribute("type", "git"),
                                 new XAttribute("url", RepositoryUrl)
@@ -344,12 +340,11 @@ class Build : NukeBuild
                             new XElement("id", packageID),
                             new XElement("version", packageVersion),
                             new XElement("authors", ProjectAuthor),
-                            new XElement("owners", ProjectOwner),
                             new XElement("requireLicenseAcceptance", true),
                             new XElement("license", new XAttribute("type", "expression"), "ZLib"),
                             new XElement("projectUrl", ProjectUrl),
                             new XElement("description", $"Multi-platform native runtime library for {ProjectName}."),
-                            new XElement("copyright", $"Copyright © {ProjectOwner}"),
+                            new XElement("copyright", $"Copyright © {ProjectAuthor}"),
                             new XElement("repository",
                                 new XAttribute("type", "git"),
                                 new XAttribute("url", RepositoryUrl)
