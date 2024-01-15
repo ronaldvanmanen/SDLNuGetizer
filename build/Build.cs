@@ -125,6 +125,7 @@ class Build : NukeBuild
 
     Target GenerateProjectBuildSystem => _ => _
         .DependsOn(InstallProjectBuildDependencies)
+        .Requires(() => Architecture)
         .Executes(() =>
         {
             // NOTE: Nuke uses System.Diagnostics.Process.Start to start external processes. See the documentation on
@@ -178,6 +179,7 @@ class Build : NukeBuild
 
     Target BuildProject => _ => _
         .DependsOn(GenerateProjectBuildSystem)
+        .Requires(() => Architecture)
         .Executes(() =>
         {
             CMake($"--build {BuildDirectory} --config Release --parallel");
@@ -186,6 +188,7 @@ class Build : NukeBuild
     Target TestProject => _ => _
         .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Windows))
         .DependsOn(BuildProject)
+        .Requires(() => Architecture)
         .Executes(() =>
         {
             CTest($"-VV --test-dir {BuildDirectory} -C Release");
@@ -193,6 +196,7 @@ class Build : NukeBuild
 
     Target InstallProject => _ => _
         .DependsOn(TestProject)
+        .Requires(() => Architecture)
         .Executes(() =>
         {
             CMake($"--install {BuildDirectory} --prefix {InstallDirectory}");
@@ -201,6 +205,7 @@ class Build : NukeBuild
     Target BuildRuntimePackage => _ => _
         .Unlisted()
         .DependsOn(InstallProject)
+        .Requires(() => Architecture)
         .Executes(() =>
         {
             var packageID = $"{ProjectName}.runtime.{Runtime}";
@@ -256,6 +261,7 @@ class Build : NukeBuild
     Target BuildDevelopmentPackage => _ => _
         .Unlisted()
         .DependsOn(InstallProject)
+        .Requires(() => Architecture)
         .Executes(() =>
         {
             var packageID = $"{ProjectName}.devel.{Runtime}";
