@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using NuGet.Packaging;
 using NuGet.RuntimeModel;
 using NuGet.Versioning;
 using Nuke.Common;
@@ -359,34 +358,25 @@ class Build : NukeBuild
                 )
             );
             
-            runtimeSpec.WriteRuntimeGraph(
-                new RuntimeGraph(
-                    new []
+            var runtimePackagePattern = $"{ProjectName}.runtime.*.{packageVersion}.nupkg";
+            var runtimePackages = PackageRootDirectory.GlobFiles(runtimePackagePattern);
+            var runtimeDescriptions = runtimePackages.Select(runtimePackage => 
+            {
+                var match = Regex.Match(runtimePackage.NameWithoutExtension, $"^(?<RuntimePackageID>{ProjectName}\\.runtime\\.(?<RuntimeID>[^.]+))\\..*$");
+                var runtimePackageID = match.Groups["RuntimePackageID"].Value;
+                var runtimeID = match.Groups["RuntimeID"].Value;
+                return new RuntimeDescription(runtimeID, new []
+                {
+                    new RuntimeDependencySet($"{ProjectName}", new []
                     {
-                        new RuntimeDescription("linux-x64", new []
-                        {
-                            new RuntimeDependencySet("SDL2", new []
-                            {
-                                new RuntimePackageDependency("SDL2.runtime.linux-x64", runtimePackageVersion)
-                            })
-                        }),
-                        new RuntimeDescription("win-x64", new []
-                        {
-                            new RuntimeDependencySet("SDL2", new []
-                            {
-                                new RuntimePackageDependency("SDL2.runtime.win-x64", runtimePackageVersion)
-                            })
-                        }),
-                        new RuntimeDescription("win-x86", new []
-                        {
-                            new RuntimeDependencySet("SDL2", new []
-                            {
-                                new RuntimePackageDependency("SDL2.runtime.win-x86", runtimePackageVersion)
-                            })
-                        }),
-                    }
-                )
-            );
+                        new RuntimePackageDependency(runtimePackageID, runtimePackageVersion)
+                    })
+                });
+            });
+            
+            var runtimeGraph = new RuntimeGraph(runtimeDescriptions);
+
+            runtimeSpec.WriteRuntimeGraph(runtimeGraph);
 
             foreach (var placeholder in placeholderFiles)
             {
