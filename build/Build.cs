@@ -129,31 +129,31 @@ class Build : NukeBuild
             // NOTE: Nuke uses System.Diagnostics.Process.Start to start external processes. See the documentation on
             // https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.processstartinfo.arguments for details
             // on how to properly escaped arguments containing spaces.
-            var arguments = new List<string>();
+            var argumentList = new List<string>();
 
             if (IsOSPlatform(OSPlatform.Windows))
             {
-                arguments.Add($"-DCMAKE_INSTALL_LIBDIR=lib/{Architecture}");
-                arguments.Add($"-DCMAKE_INSTALL_BINDIR=lib/{Architecture}");
-                arguments.Add($"-DCMAKE_INSTALL_INCLUDEDIR=include");
+                argumentList.Add($"-DCMAKE_INSTALL_LIBDIR=lib/{Architecture}");
+                argumentList.Add($"-DCMAKE_INSTALL_BINDIR=lib/{Architecture}");
+                argumentList.Add($"-DCMAKE_INSTALL_INCLUDEDIR=include");
             }
 
             if (IsOSPlatform(OSPlatform.Linux))
             {
-                arguments.Add($"-DSDL2_DISABLE_SDL2MAIN=OFF");
+                argumentList.Add($"-DSDL2_DISABLE_SDL2MAIN=OFF");
             }
 
-            arguments.Add($"-DSDL_VENDOR_INFO=Ronald\\x20van\\x20Manen");
-            arguments.Add($"-DSDL_INSTALL_TESTS=ON");
-            arguments.Add($"-DSDL_TESTS=ON");
-            arguments.Add($"-DSDL_WERROR=ON");
-            arguments.Add($"-DSDL_SHARED=ON");
-            arguments.Add($"-DSDL_STATIC=ON");
-            arguments.Add($"-DCMAKE_BUILD_TYPE=Release");
+            argumentList.Add($"-DSDL_VENDOR_INFO=\"{ProjectAuthor}\"");
+            argumentList.Add($"-DSDL_INSTALL_TESTS=ON");
+            argumentList.Add($"-DSDL_TESTS=ON");
+            argumentList.Add($"-DSDL_WERROR=ON");
+            argumentList.Add($"-DSDL_SHARED=ON");
+            argumentList.Add($"-DSDL_STATIC=ON");
+            argumentList.Add($"-DCMAKE_BUILD_TYPE=Release");
 
             if (IsOSPlatform(OSPlatform.Linux))
             {
-                arguments.Add($"-G Ninja");
+                argumentList.Add($"-G Ninja");
             }
 
             if (IsOSPlatform(OSPlatform.Windows))
@@ -161,18 +161,25 @@ class Build : NukeBuild
                 switch (Architecture)
                 {
                     case "x64":
-                        arguments.Add("-A x64");
+                        argumentList.Add("-A x64");
                         break;
                     case "x86":
-                        arguments.Add("-A Win32");
+                        argumentList.Add("-A Win32");
                         break;
                 }
             }
 
-            arguments.Add($"-S {SourceDirectory:dn}");
-            arguments.Add($"-B {BuildDirectory:dn}");
+            argumentList.Add($"-S \"{SourceDirectory}\"");
+            argumentList.Add($"-B \"{BuildDirectory}\"");
 
-            CMake(string.Join(' ', arguments));
+            // NOTE: ArgumentStringHandler assumes our arguments must be double qouted because we
+            // pass our arguments as a single string. To prevent this from happening we explicity
+            // create an ArgumentStringHandler and append our arguments as a string literal.
+            var argumentString = string.Join(' ', argumentList);
+            ArgumentStringHandler arguments = "";
+            arguments.AppendLiteral(argumentString);
+
+            CMake(arguments);
         });
 
     Target BuildProject => _ => _
