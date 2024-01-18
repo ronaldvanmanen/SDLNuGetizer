@@ -24,6 +24,8 @@ class Build : NukeBuild
 
     const string ProjectUrl = "https://github.com/ronaldvanmanen/SDL2-packaging";
 
+    const string ProjectLicense = "Zlib";
+
     const string RepositoryUrl = "https://github.com/ronaldvanmanen/SDL2-packaging";
 
     public static int Main () => Execute<Build>(x => x.BuildPackages);
@@ -229,7 +231,7 @@ class Build : NukeBuild
                             new XElement("version", GitVersion.NuGetVersion),
                             new XElement("authors", ProjectAuthor),
                             new XElement("requireLicenseAcceptance", true),
-                            new XElement("license", new XAttribute("type", "expression"), "ZLib"),
+                            new XElement("license", new XAttribute("type", "expression"), ProjectLicense),
                             new XElement("projectUrl", ProjectUrl),
                             new XElement("description", $"{Runtime} runtime library for {ProjectName}."),
                             new XElement("copyright", $"Copyright © {ProjectAuthor}"),
@@ -284,7 +286,7 @@ class Build : NukeBuild
                             new XElement("version", GitVersion.NuGetVersion),
                             new XElement("authors", ProjectAuthor),
                             new XElement("requireLicenseAcceptance", true),
-                            new XElement("license", new XAttribute("type", "expression"), "ZLib"),
+                            new XElement("license", new XAttribute("type", "expression"), ProjectLicense),
                             new XElement("projectUrl", ProjectUrl),
                             new XElement("description", $"{Runtime} native package for {ProjectName} development."),
                             new XElement("copyright", $"Copyright © {ProjectAuthor}"),
@@ -348,7 +350,7 @@ class Build : NukeBuild
                             new XElement("version", packageVersion),
                             new XElement("authors", ProjectAuthor),
                             new XElement("requireLicenseAcceptance", true),
-                            new XElement("license", new XAttribute("type", "expression"), "ZLib"),
+                            new XElement("license", new XAttribute("type", "expression"), ProjectLicense),
                             new XElement("projectUrl", ProjectUrl),
                             new XElement("description", $"Multi-platform native runtime library for {ProjectName}."),
                             new XElement("copyright", $"Copyright © {ProjectAuthor}"),
@@ -365,14 +367,15 @@ class Build : NukeBuild
                     )
                 )
             );
-            
+
             var runtimePackagePattern = $"{ProjectName}.runtime.*.{packageVersion}.nupkg";
             var runtimePackages = PackageRootDirectory.GlobFiles(runtimePackagePattern);
             var runtimeDescriptions = runtimePackages.Select(runtimePackage => 
             {
-                var match = Regex.Match(runtimePackage.NameWithoutExtension, $"^(?<RuntimePackageID>{ProjectName}\\.runtime\\.(?<RuntimeID>[^.]+))\\..*$");
-                var runtimePackageID = match.Groups["RuntimePackageID"].Value;
-                var runtimeID = match.Groups["RuntimeID"].Value;
+                var runtimePackagePattern = $"^(?<RuntimePackageID>{ProjectName}\\.runtime\\.(?<RuntimeID>[^.]+))\\..*$";
+                var runtimePackageMatch = Regex.Match(runtimePackage.NameWithoutExtension, runtimePackagePattern);
+                var runtimePackageID = runtimePackageMatch.Groups["RuntimePackageID"].Value;
+                var runtimeID = runtimePackageMatch.Groups["RuntimeID"].Value;
                 return new RuntimeDescription(runtimeID, new []
                 {
                     new RuntimeDependencySet($"{ProjectName}", new []
@@ -381,7 +384,7 @@ class Build : NukeBuild
                     })
                 });
             });
-            
+
             var runtimeGraph = new RuntimeGraph(runtimeDescriptions);
 
             runtimeSpec.WriteRuntimeGraph(runtimeGraph);
