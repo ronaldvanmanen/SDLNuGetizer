@@ -1,5 +1,5 @@
 mode: ContinuousDeployment
-next-version: 2.28.0
+next-version: 2.30.0
 branches:
   main:
     increment: None
