@@ -193,12 +193,14 @@ class Build : NukeBuild
         });
 
     Target TestProject => _ => _
-        .OnlyWhenStatic(() => IsOSPlatform(OSPlatform.Windows))
         .DependsOn(BuildProject)
         .Requires(() => Architecture)
         .Executes(() =>
         {
-            CTest($"-VV --test-dir {BuildDirectory} -C Release");
+            if (IsOSPlatform(OSPlatform.Windows))
+            {
+                CTest($"-VV --test-dir {BuildDirectory} -C Release");
+            }
         });
 
     Target InstallProject => _ => _
@@ -268,6 +270,7 @@ class Build : NukeBuild
         .Unlisted()
         .DependsOn(InstallProject)
         .Requires(() => Architecture)
+        .Produces(PackageRootDirectory / "*.nupkg")
         .Executes(() =>
         {
             var packageID = $"{ProjectName}.devel.{Runtime}";
@@ -323,7 +326,7 @@ class Build : NukeBuild
 
     Target BuildMultiplatformPackage => _ => _
         .Unlisted()
-        .DependsOn(BuildRuntimePackage)
+        .Consumes(BuildRuntimePackage)
         .Executes(() =>
         {
             var packageID = $"{ProjectName}";
